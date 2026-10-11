@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <defs>
+        <path id="segment" d="M0 0V-30A30 30 0 0 1 25.98-15Z"/>
+    </defs>
+    <g transform="translate(32 32)">
+        <use href="#segment" fill="#ff3b30"/>
+        <use href="#segment" transform="rotate(60)" fill="#ffcc00"/>
+        <use href="#segment" transform="rotate(120)" fill="#34c759"/>
+        <use href="#segment" transform="rotate(180)" fill="#32ade6"/>
+        <use href="#segment" transform="rotate(240)" fill="#5856d6"/>
+        <use href="#segment" transform="rotate(300)" fill="#ff2d92"/>
+        <circle r="13" fill="#42445a"/>
+    </g>
+</svg>

@@ -1,0 +1,69 @@
+{
+    "name": "colora",
+    "version": "0.1.0",
+    "license": "MIT",
+    "author": "Bogdan Galan",
+    "description": "Flat, simple, hackable color picker as web component.",
+    "homepage": "https://github.com/Shinsekai7/colora#readme",
+    "bugs": "https://github.com/Shinsekai7/colora/issues",
+    "repository": "github:Shinsekai7/colora",
+    "keywords": [
+        "color",
+        "color-picker",
+        "web-component",
+        "custom-element",
+        "oklch",
+        "ux"
+    ],
+    "packageManager": "pnpm@10.27.0",
+    "type": "module",
+    "main": "./dist/index.mjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/types/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "sideEffects": [
+        "./dist/define.mjs",
+        "./dist/colora.min.js"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/types/index.d.ts",
+            "default": "./dist/index.mjs"
+        },
+        "./define": {
+            "types": "./dist/types/define.d.ts",
+            "default": "./dist/define.mjs"
+        },
+        "./package.json": "./package.json"
+    },
+    "scripts": {
+        "dev": "vite --config build/demo.config.ts",
+        "lint": "eslint \"**/*.{js,mjs,ts,mts,vue,json}\" --cache",
+        "lint:fix": "pnpm lint --fix",
+        "build:lib": "node build/build.js && tsc -p tsconfig.build.json",
+        "build:demo": "vite build --config build/demo.config.ts",
+        "preview": "vite preview  --config build/demo.config.ts",
+        "test": "vitest run --config build/test.config.ts",
+        "test:watch": "vitest --config build/test.config.ts",
+        "typecheck": "tsc"
+    },
+    "devDependencies": {
+        "@eslint/js": "10.0.1",
+        "@types/culori": "4.0.1",
+        "@types/node": "24.13.3",
+        "@vitest/browser-playwright": "5.0.3",
+        "color-name": "2.1.1",
+        "culori": "4.0.2",
+        "eslint": "10.10.0",
+        "fast-check": "4.10.2",
+        "globals": "17.12.0",
+        "playwright": "1.64.0",
+        "typescript": "6.0.3",
+        "typescript-eslint": "8.71.1",
+        "vite": "8.1.5",
+        "vite-plugin-banner": "0.8.1",
+        "vitest": "5.0.3"
+    }
+}

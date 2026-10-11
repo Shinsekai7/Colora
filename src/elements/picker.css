@@ -1,0 +1,468 @@
+/*
+ * Styles of <colora-picker>. Everything visual is derived from custom properties set by the element:
+ * --cp-hue (degrees), --cp-s, --cp-v, --cp-a (0 - 1), --cp-color, --cp-color-opaque and --cp-saved.
+ * The --cp-* properties declared on :host are public and meant for theming.
+ */
+
+:host {
+    --cp-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --cp-background: #fff;
+    --cp-text: #75797e;
+    --cp-control-background: #f1f3f4;
+    --cp-accent: #4285f4;
+    --cp-accent-text: #fff;
+    --cp-danger: #f44250;
+    --cp-radius: 0.15em;
+    --cp-shadow: 0 0.15em 1.5em 0 rgb(0 0 0 / 0.1), 0 0 1em 0 rgb(0 0 0 / 0.03);
+    --cp-focus: rgb(66 133 244 / 0.75);
+    --cp-gap: 8px;
+    --cp-checkerboard: repeating-conic-gradient(#808080 0% 25%, #fff 0% 50%) 0 0 / 0.5em 0.5em;
+
+    display: inline-block;
+    font-family: var(--cp-font-family);
+    vertical-align: middle;
+}
+
+:host([hidden]) {
+    display: none;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.root {
+    display: contents;
+}
+
+/* Trigger, only shown as popup */
+
+.anchor {
+    display: inline-block;
+    anchor-name: --cp-anchor;
+}
+
+:host(:not([popup])) .anchor {
+    display: none;
+}
+
+.trigger {
+    position: relative;
+    display: block;
+    width: 2em;
+    height: 2em;
+    padding: 0;
+    border: none;
+    border-radius: var(--cp-radius);
+    background: var(--cp-checkerboard);
+    cursor: pointer;
+    font: inherit;
+    overflow: hidden;
+}
+
+.trigger::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--cp-saved);
+    transition: background 0.3s;
+}
+
+/* No saved color: a cross on a light background */
+.trigger.cleared {
+    background: #fff;
+}
+
+.trigger.cleared::after {
+    background:
+        linear-gradient(45deg, transparent calc(50% - 1.5px), #42445a calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+        linear-gradient(-45deg, transparent calc(50% - 1.5px), #42445a calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px));
+    inset: 20%;
+}
+
+:host([disabled]) .trigger {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Panel */
+
+.panel {
+    display: none;
+    flex-direction: column;
+    gap: 0.75em;
+    width: 28.5em;
+    max-width: 95vw;
+    padding: 0.8em;
+    border: none;
+    border-radius: 0.1em;
+    background: var(--cp-background);
+    color: var(--cp-text);
+    font: inherit;
+    box-shadow: var(--cp-shadow);
+    overflow: visible;
+}
+
+.panel:not([popover]),
+.panel:popover-open {
+    display: flex;
+}
+
+.panel[popover] {
+    inset: auto;
+    margin: var(--cp-gap);
+    position-anchor: --cp-anchor;
+    position-try-fallbacks: flip-block, flip-inline;
+    transition: opacity 0.15s, overlay 0.15s allow-discrete, display 0.15s allow-discrete;
+}
+
+@starting-style {
+    .panel[popover]:popover-open {
+        opacity: 0;
+    }
+}
+
+.panel[popover]:not(:popover-open) {
+    opacity: 0;
+}
+
+/* Used where anchor positioning isn't supported, coordinates are set by the element */
+.panel.fallback-position {
+    position: fixed;
+    margin: 0;
+}
+
+:host([disabled]) .panel {
+    opacity: 0.6;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* Selection: preview, area and sliders */
+
+.selection {
+    display: flex;
+    gap: 0.75em;
+    height: 8em;
+}
+
+.preview {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 2em;
+    border-radius: var(--cp-radius);
+    background: var(--cp-checkerboard);
+    overflow: hidden;
+}
+
+.saved,
+.current {
+    flex: 1;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    font: inherit;
+}
+
+.saved {
+    background: var(--cp-saved);
+    cursor: pointer;
+}
+
+.current {
+    background: var(--cp-color);
+}
+
+.area,
+.slider {
+    position: relative;
+    flex-shrink: 0;
+    border-radius: var(--cp-radius);
+    cursor: grab;
+    user-select: none;
+    outline: none;
+    transition: box-shadow 0.3s;
+}
+
+.area:active,
+.slider:active {
+    cursor: grabbing;
+}
+
+.area {
+    flex: 1;
+    background:
+        linear-gradient(to top, #000, transparent),
+        linear-gradient(to right, #fff, hsl(var(--cp-hue) 100% 50%));
+}
+
+.slider {
+    border-radius: 50em;
+}
+
+.hue {
+    --cp-position: calc(var(--cp-hue) / 360);
+    background: linear-gradient(var(--cp-direction, to right), red, #ff0, lime, cyan, blue, #f0f, red);
+}
+
+.alpha {
+    --cp-position: var(--cp-a);
+    background: linear-gradient(var(--cp-direction, to right), transparent, var(--cp-color-opaque)), var(--cp-checkerboard);
+    background-size: 100%, 0.25em 0.25em;
+}
+
+.thumb {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #fff;
+    border-radius: 100%;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    pointer-events: none;
+    translate: -50% -50%;
+}
+
+.area .thumb {
+    left: calc(var(--cp-s) * 100%);
+    top: calc((1 - var(--cp-v)) * 100%);
+    background: var(--cp-color-opaque);
+}
+
+.hue .thumb {
+    background: hsl(var(--cp-hue) 100% 50%);
+}
+
+.alpha .thumb {
+    background: rgb(0 0 0 / var(--cp-a));
+}
+
+/* Horizontal sliders: 0 on the left */
+.slider[aria-orientation='horizontal'] {
+    height: 0.5em;
+}
+
+.slider[aria-orientation='horizontal'] .thumb {
+    top: 50%;
+    left: calc(var(--cp-position) * 100%);
+}
+
+/* Vertical sliders: 0 at the bottom */
+.slider[aria-orientation='vertical'] {
+    --cp-direction: to top;
+    width: 8px;
+}
+
+.slider[aria-orientation='vertical'] .thumb {
+    left: 50%;
+    top: calc((1 - var(--cp-position)) * 100%);
+}
+
+/* Focus rings, only for keyboard users */
+
+.area:focus-visible,
+.slider:focus-visible {
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.85), 0 0 0 3px rgb(0 0 0 / 0.25);
+}
+
+button:focus-visible,
+input:focus-visible,
+.swatch.active {
+    outline: none;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.85), 0 0 0 3px var(--cp-focus-color, var(--cp-focus));
+}
+
+/* Swatches */
+
+.swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 1.75em);
+    align-items: center;
+}
+
+.swatches:empty {
+    display: none;
+}
+
+.swatch {
+    --cp-focus-color: var(--cp-swatch-color);
+    position: relative;
+    width: calc(1.75em - 5px);
+    height: calc(1.75em - 5px);
+    margin: 2.5px;
+    padding: 0;
+    border: none;
+    border-radius: var(--cp-radius);
+    background: var(--cp-checkerboard);
+    background-size: 6px 6px;
+    font: inherit;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter 0.15s, box-shadow 0.15s;
+}
+
+.swatch::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--cp-swatch-color);
+    border: 1px solid rgb(0 0 0 / 0.05);
+    border-radius: var(--cp-radius);
+}
+
+.swatch:hover {
+    filter: brightness(1.05);
+}
+
+/* Controls: input, formats and buttons */
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6em 0.4em;
+}
+
+.formats {
+    display: contents;
+}
+
+.input,
+.format,
+.button {
+    margin: 0;
+    padding: 0.45em 0.5em;
+    border: none;
+    border-radius: var(--cp-radius);
+    background: var(--cp-control-background);
+    color: var(--cp-text);
+    font: inherit;
+    font-size: 0.75em;
+    letter-spacing: 0.07em;
+    text-align: center;
+    cursor: pointer;
+    transition: filter 0.15s, box-shadow 0.15s;
+}
+
+.format:hover,
+.button:hover {
+    filter: brightness(0.975);
+}
+
+.input {
+    flex: 1 1 8em;
+    min-width: 8em;
+    text-align: left;
+    cursor: text;
+}
+
+.input::selection {
+    background: var(--cp-accent);
+    color: var(--cp-accent-text);
+}
+
+.input[aria-invalid='true'] {
+    box-shadow: inset 0 0 0 1px var(--cp-danger);
+}
+
+.format[aria-checked='true'],
+.save {
+    background: var(--cp-accent);
+    color: var(--cp-accent-text);
+}
+
+.cancel,
+.clear {
+    --cp-focus-color: rgb(244 66 80 / 0.75);
+    background: var(--cp-danger);
+    color: var(--cp-accent-text);
+}
+
+.save:hover,
+.cancel:hover,
+.clear:hover {
+    filter: brightness(0.925);
+}
+
+/* Theme: monolith */
+
+:host([theme='monolith']) .panel {
+    width: 14.25em;
+}
+
+:host([theme='monolith']) .selection {
+    flex-direction: column;
+    height: auto;
+}
+
+:host([theme='monolith']) .preview {
+    flex-direction: row;
+    width: 100%;
+    height: 1em;
+}
+
+:host([theme='monolith']) .area {
+    flex: none;
+    height: 8em;
+}
+
+/* Theme: nano */
+
+:host([theme='nano']) .panel {
+    width: 14.25em;
+    padding: 0 0 0.6em;
+    gap: 0.6em;
+}
+
+:host([theme='nano']) .selection {
+    display: grid;
+    grid-template-columns: 2.6em 1fr; /* Preview plus its margin */
+    grid-template-rows: 1fr auto auto;
+    gap: 0.6em;
+    height: 10.5em;
+    padding-bottom: 0.2em;
+}
+
+:host([theme='nano']) .area {
+    grid-area: 1 / 1 / 2 / 3;
+    border-radius: var(--cp-radius) var(--cp-radius) 0 0;
+}
+
+:host([theme='nano']) .preview {
+    grid-area: 2 / 1 / 4 / 2;
+    align-self: center;
+    width: 2em;
+    height: 2em;
+    margin-left: 0.6em;
+    border-radius: 50em;
+}
+
+:host([theme='nano']) .saved {
+    display: none;
+}
+
+:host([theme='nano']) .hue {
+    grid-area: 2 / 2;
+    margin-right: 0.6em;
+}
+
+:host([theme='nano']) .alpha {
+    grid-area: 3 / 2;
+    margin-right: 0.6em;
+}
+
+:host([theme='nano']) .swatches,
+:host([theme='nano']) .controls {
+    padding: 0 0.6em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    .panel[popover] {
+        transition: none !important;
+    }
+}
