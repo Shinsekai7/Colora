@@ -47,7 +47,8 @@
         "preview": "vite preview  --config build/demo.config.ts",
         "test": "vitest run --config build/test.config.ts",
         "test:watch": "vitest --config build/test.config.ts",
-        "typecheck": "tsc"
+        "typecheck": "tsc",
+        "prepublishOnly": "node -e \"require('node:fs').accessSync('dist/index.mjs')\" || (echo 'Run pnpm build:lib before publishing' && exit 1)"
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
