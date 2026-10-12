@@ -1,4 +1,8 @@
-import '/src/define.ts';
+import {define} from '/src/elements/index.ts';
+
+// Called explicitly: `sideEffects` in package.json only covers dist/, so a plain
+// `import '/src/define.ts'` would be removed from the production build
+define();
 
 const pickerContainer = document.querySelector('.colora-container');
 const themeContainer = document.querySelector('.theme-container');
