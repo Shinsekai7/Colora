@@ -15,7 +15,7 @@
         "oklch",
         "ux"
     ],
-    "packageManager": "pnpm@10.27.0",
+    "packageManager": "pnpm@12.11.2",
     "type": "module",
     "main": "./dist/index.mjs",
     "module": "./dist/index.mjs",
