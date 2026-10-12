@@ -422,6 +422,78 @@ legend,
     font: 0.95rem ui-monospace, 'Cascadia Code', Consolas, monospace;
 }
 
+/* Example with a linked input */
+
+.example {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 32px;
+}
+
+@media (max-width: 820px) {
+    .example {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.example-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-self: start;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.example-form > label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* A row, so the picker element doesn't add a line below the input */
+.example-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.example-field .demo-input {
+    width: 100%;
+    padding-left: 40px;
+}
+
+.example-swatch {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15);
+    translate: 0 -50%;
+    pointer-events: none;
+}
+
+.submit {
+    align-self: start;
+    margin-top: 6px;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-weight: 600;
+}
+
+.example-result {
+    color: var(--text-muted);
+    font: 0.85rem ui-monospace, 'Cascadia Code', Consolas, monospace;
+    overflow-wrap: anywhere;
+}
+
 .readout {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);

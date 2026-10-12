@@ -193,6 +193,46 @@
             </div>
         </div>
     </section>
+
+    <section class="playground-section" aria-labelledby="example-title">
+        <h2 id="example-title">With your own input</h2>
+        <p class="section-description">Keep the text field of your form: it opens the picker, and typing and picking stay in sync.</p>
+
+        <div class="example">
+            <form class="example-form" id="example-form">
+                <label for="brand">Brand color</label>
+                <div class="example-field">
+                    <span class="example-swatch" id="brand-swatch"></span>
+                    <input id="brand" name="brand" value="#e91e63" class="demo-input" spellcheck="false" autocomplete="off">
+                    <colora-picker for="brand" popup placement="bottom-start" formats="hex rgb oklch"
+                                   swatches="#e91e63 #9c27b0 #3f51b5 #009688 #ff9800"></colora-picker>
+                </div>
+                <p class="field-hint">Click the field or press <kbd>↓</kbd> to open the picker, or type any CSS color.</p>
+
+                <button type="submit" class="submit">Submit</button>
+                <output class="example-result" id="example-result" aria-live="polite"></output>
+            </form>
+
+            <section class="code" aria-labelledby="example-code-title">
+                <div class="code-header">
+                    <h3 id="example-code-title">Code</h3>
+                    <button type="button" class="copy" id="copy-example">Copy</button>
+                </div>
+                <pre><code id="example-code"><span class="tok-tag">&lt;form&gt;</span>
+    <span class="tok-tag">&lt;label</span> <span class="tok-attr">for</span>="<span class="tok-value">brand</span>"<span class="tok-tag">&gt;</span>Brand color<span class="tok-tag">&lt;/label&gt;</span>
+    <span class="tok-tag">&lt;input</span> <span class="tok-attr">id</span>="<span class="tok-value">brand</span>" <span class="tok-attr">name</span>="<span class="tok-value">brand</span>" <span class="tok-attr">value</span>="<span class="tok-value">#e91e63</span>"<span class="tok-tag">&gt;</span>
+    <span class="tok-tag">&lt;colora-picker</span>
+        <span class="tok-attr">for</span>="<span class="tok-value">brand</span>"
+        <span class="tok-attr">popup</span>
+        <span class="tok-attr">placement</span>="<span class="tok-value">bottom-start</span>"
+        <span class="tok-attr">formats</span>="<span class="tok-value">hex rgb oklch</span>"
+        <span class="tok-attr">swatches</span>="<span class="tok-value">#e91e63 #9c27b0 #3f51b5 #009688 #ff9800</span>"<span class="tok-tag">&gt;</span>
+    <span class="tok-tag">&lt;/colora-picker&gt;</span>
+<span class="tok-tag">&lt;/form&gt;</span></code></pre>
+                <p class="hint">The input is submitted with the form, the picker has no <code>name</code>. Without JavaScript it's still a plain text field.</p>
+            </section>
+        </div>
+    </section>
 </main>
 
 <footer>

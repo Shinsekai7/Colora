@@ -248,6 +248,30 @@ form.addEventListener('change', event => {
     apply();
 });
 
+/* Example with a linked input */
+
+const exampleForm = document.getElementById('example-form');
+const brand = document.getElementById('brand');
+const brandSwatch = document.getElementById('brand-swatch');
+const exampleResult = document.getElementById('example-result');
+
+// Typed text may not be a color yet, the dot keeps the last valid one
+function showBrandColor() {
+    if (CSS.supports('color', brand.value)) {
+        brandSwatch.style.background = brand.value;
+    }
+}
+
+// The picker writes into the input and emits its input event, like typing
+brand.addEventListener('input', showBrandColor);
+showBrandColor();
+
+exampleForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const fields = [...new FormData(exampleForm)].map(([name, value]) => `${name}=${value}`);
+    exampleResult.textContent = `Submitted: ${fields.join('&')}`;
+});
+
 /* Copy buttons */
 
 async function copy(button, text) {
@@ -268,6 +292,9 @@ async function copy(button, text) {
 }
 
 document.getElementById('copy-code').addEventListener('click', event => copy(event.currentTarget, codeText));
+
+document.getElementById('copy-example').addEventListener('click', event =>
+    copy(event.currentTarget, document.getElementById('example-code').textContent));
 
 for (const button of document.querySelectorAll('[data-copy]')) {
     button.addEventListener('click', () => copy(button, button.dataset.copy));
