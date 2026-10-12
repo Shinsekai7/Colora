@@ -1,9 +1,9 @@
 {
-    "name": "colora",
+    "name": "@shinsekai/colora",
     "version": "0.1.0",
     "license": "MIT",
     "author": "Bogdan Galan",
-    "description": "Flat, simple, hackable color picker as web component.",
+    "description": "Accessible color picker web component for any framework, with OKLCH support and zero dependencies.",
     "homepage": "https://github.com/Shinsekai7/colora#readme",
     "bugs": "https://github.com/Shinsekai7/colora/issues",
     "repository": "github:Shinsekai7/colora",
@@ -23,6 +23,9 @@
     "files": [
         "dist"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "sideEffects": [
         "./dist/define.mjs",
         "./dist/colora.min.js"

@@ -1,4 +1,4 @@
-// Registers <colora-picker>: `import 'colora/define'`
+// Registers <colora-picker>: `import '@shinsekai/colora/define'`
 import {define} from './elements/index.js';
 
 define();

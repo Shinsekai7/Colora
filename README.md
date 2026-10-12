@@ -1,13 +1,13 @@
 <h1 align="center">Colora</h1>
 
 <h3 align="center">
-    Flat, simple, hackable color picker as web component.
+    Accessible color picker web component for any framework, with OKLCH support and zero dependencies.
 </h3>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/colora"><img
+  <a href="https://www.npmjs.com/package/@shinsekai/colora"><img
      alt="npm version"
-     src="https://img.shields.io/npm/v/colora.svg?color=3498DB"></a>
+     src="https://img.shields.io/npm/v/@shinsekai/colora.svg?color=3498DB"></a>
   <img alt="No dependencies" src="https://img.shields.io/badge/dependencies-none-27ae60.svg">
 </p>
 
@@ -26,13 +26,13 @@
 ## Getting started
 
 ```shell
-npm install colora
+npm install @shinsekai/colora
 ```
 
 Register the element once, then use it anywhere:
 
 ```js
-import 'colora/define';
+import '@shinsekai/colora/define';
 ```
 
 ```html
@@ -179,7 +179,7 @@ See `DEFAULT_LABELS` for all keys.
 The color utilities can be used on their own:
 
 ```js
-import {parseColor, fillPowerless, oklch, rgb} from 'colora';
+import {parseColor, fillPowerless, oklch, rgb} from '@shinsekai/colora';
 
 const parsed = parseColor('rebeccapurple'); // {format: 'named', color: {h: 270, s: 66.67, v: 60, a: 1}, ...}
 rgb.stringify(parsed.color);                // 'rgb(102 51 153)'
@@ -198,7 +198,7 @@ The picker is built from parts that can be used separately:
 * `createSlider(element, options)`, `createArea(element, options)`: pointer and keyboard handling for sliders and 2D areas.
 
 ```js
-import {createPicker, createSlider} from 'colora';
+import {createPicker, createSlider} from '@shinsekai/colora';
 
 const picker = createPicker({color: '#42445a'});
 picker.subscribe(state => render(state));
