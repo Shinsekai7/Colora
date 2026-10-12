@@ -1,6 +1,6 @@
 {
     "name": "@shinsekai/colora",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "license": "MIT",
     "author": "Bogdan Galan",
     "description": "Accessible color picker web component for any framework, with OKLCH support and zero dependencies.",
