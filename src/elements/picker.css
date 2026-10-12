@@ -1,6 +1,7 @@
 /*
  * Styles of <colora-picker>. Everything visual is derived from custom properties set by the element:
- * --cp-hue (degrees), --cp-s, --cp-v, --cp-a (0 - 1), --cp-color, --cp-color-opaque and --cp-saved.
+ * --cp-hue (degrees), --cp-s, --cp-v, --cp-a (0 - 1), --cp-color, --cp-color-opaque, --cp-saved
+ * and --cp-reference, the color the preview compares with.
  * The --cp-* properties declared on :host are public and meant for theming.
  */
 
@@ -171,7 +172,7 @@
 }
 
 .saved {
-    background: var(--cp-saved);
+    background: var(--cp-reference);
     cursor: pointer;
 }
 

@@ -207,7 +207,7 @@ picker.i18n = {
     input: 'Color value',                  // Accessible name of the text field
     formats: 'Color format',               // Accessible name of the format buttons
     swatches: 'Swatches',                  // Accessible name of the swatches
-    saved: 'Revert to saved color',        // Accessible name of the saved color in the preview
+    saved: 'Revert to previous color',     // Accessible name of the previous color in the preview
     save: 'Save',                          // Text of the save button
     cancel: 'Cancel',                      // Text of the cancel button
     clear: 'Clear',                        // Text of the clear button

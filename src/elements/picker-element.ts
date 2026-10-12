@@ -58,6 +58,9 @@ export class ColorPickerElement extends BaseElement {
 
     #picker!: Picker;
 
+    /** The color the popup was opened with, null while closed. See #reference. */
+    #openedWith: HSVA | null = null;
+
     /** The panel's controls, null until built, see #render. */
     #content: PanelContent | null = null;
     #sliders: Disposable | null = null;
@@ -397,7 +400,10 @@ export class ColorPickerElement extends BaseElement {
 
         picker.on('save', () => this.#dispatch('change'));
         picker.on('cancel', () => this.#dispatch('cancel'));
-        picker.on('open', () => this.#dispatch('open'));
+        picker.on('open', () => {
+            this.#openedWith = picker.getState().color;
+            this.#dispatch('open');
+        });
 
         picker.on('close', () => {
             const {color, saved} = picker.getState();
@@ -407,8 +413,31 @@ export class ColorPickerElement extends BaseElement {
                 picker.cancel();
             }
 
+            this.#openedWith = null;
+
             this.#dispatch('close');
         });
+    }
+
+    /**
+     * The color the preview compares with: the saved one. Without a save button every change is saved,
+     * so popups use the color they were opened with instead.
+     */
+    #reference(state: PickerState): HSVA | null {
+        return this.#explicitSave ? state.saved : this.#openedWith ?? state.saved;
+    }
+
+    /** Goes back to the reference color, like a change made by the user. */
+    #revert() {
+        const target = this.#openedWith;
+
+        if (this.#explicitSave || !target) {
+            this.#picker.cancel();
+            return;
+        }
+
+        this.#picker.adjust(target);
+        this.#picker.adjustEnd();
     }
 
     /** Fills the panel with its controls. */
@@ -416,7 +445,7 @@ export class ColorPickerElement extends BaseElement {
         const content = createPanelContent(this.#shell.panel);
         this.#content = content;
 
-        bindEvents(content, () => this.#picker);
+        bindEvents(content, () => this.#picker, () => this.#revert());
         renderPanelLabels(content, this.i18n);
         renderFormats(content, this.#formatList());
         this.#createSliders();
@@ -458,7 +487,7 @@ export class ColorPickerElement extends BaseElement {
         }
 
         if (content) {
-            renderPanel(content, state, previousContent);
+            renderPanel(content, state, this.#reference(state), previousContent);
             renderVisibility(content, {hidden: this.#tokens('hide'), buttons: this.#tokens('buttons'), lockOpacity: this.#lockOpacity});
         }
 

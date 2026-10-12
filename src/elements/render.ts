@@ -35,10 +35,15 @@ export function renderShell(shell: Shell, state: PickerState) {
     panel.inert = state.disabled;
 }
 
-/** Renders the state on the panel's controls. Swatches are only re-created if they changed since `previous`. */
-export function renderPanel(content: PanelContent, state: PickerState, previous?: PickerState) {
-    const {area, hue, alpha, input, formats, swatches} = content;
+/**
+ * Renders the state on the panel's controls. Swatches are only re-created if they changed since `previous`.
+ * The preview compares the color with `reference`, see the element.
+ */
+export function renderPanel(content: PanelContent, state: PickerState, reference: HSVA | null, previous?: PickerState) {
+    const {preview, area, hue, alpha, input, formats, swatches} = content;
     const {color} = state;
+
+    preview.style.setProperty('--cp-reference', reference ? rgbString(reference) : 'transparent');
 
     setAria(area, Math.round(color.s), `${percent(color.s)}, ${percent(color.v)}`);
     setAria(hue, Math.round(color.h), `${Math.round(color.h)}°`);

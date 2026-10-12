@@ -69,8 +69,13 @@ describe('computePosition', () => {
         expect(computePosition(anchor, {width: 200, height: 700}, viewport, parsePlacement('bottom'))).toMatchObject({y: 328});
     });
 
-    it('keeps the panel within the viewport', () => {
-        expect(place('bottom', {...anchor, left: 0})).toMatchObject({x: 0});
-        expect(place('bottom', {...anchor, left: 980})).toMatchObject({x: 800});
+    it('keeps the panel within the viewport, the gap away from its edges', () => {
+        expect(place('bottom', {...anchor, left: 0})).toMatchObject({x: 8});
+        expect(place('bottom', {...anchor, left: 980})).toMatchObject({x: 792});
+    });
+
+    // E.g. on phones
+    it('centers panels nearly as wide as the viewport', () => {
+        expect(computePosition({...anchor, left: 0}, {width: 990, height: 100}, viewport, parsePlacement('bottom-start'))).toMatchObject({x: 5});
     });
 });

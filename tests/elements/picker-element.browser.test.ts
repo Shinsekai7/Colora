@@ -303,6 +303,53 @@ describe('with a save button', () => {
     });
 });
 
+describe('previous color in the preview', () => {
+    const background = (el: ColorPickerElement, selector: string) => getComputedStyle(part(el, selector)).backgroundColor;
+
+    // Without a save button every change is saved right away
+    it('is the color the popup was opened with', async () => {
+        const el = mount('popup value="#f00"');
+        el.showPicker();
+
+        await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}');
+        expect(el.value).not.toBe('#FF0000');
+        expect(background(el, '.saved')).toBe('rgb(255, 0, 0)');
+        expect(background(el, '.current')).not.toBe('rgb(255, 0, 0)');
+    });
+
+    it('reverts to it like a change', async () => {
+        const el = mount('popup value="#f00"');
+        el.showPicker();
+        await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}');
+        const log = record(el);
+
+        await click(part(el, '.saved'));
+        expect(el.value).toBe('#FF0000');
+        expect(log).toEqual(['input', 'change']);
+        expect(isOpen(el)).toBe(true);
+    });
+
+    it('starts over when opened again', async () => {
+        const el = mount('popup value="#f00"');
+        el.showPicker();
+        await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}');
+
+        el.hidePicker();
+        el.showPicker();
+        expect(background(el, '.saved')).toBe(background(el, '.current'));
+    });
+
+    it('is the saved color with a save button', () => {
+        const el = mount('popup value="#f00" buttons="save"');
+        el.showPicker();
+        el.picker.adjust({h: 120});
+        expect(background(el, '.saved')).toBe('rgb(255, 0, 0)');
+
+        el.picker.save();
+        expect(background(el, '.saved')).toBe('rgb(0, 255, 0)');
+    });
+});
+
 describe('popup', () => {
     it('opens with the trigger and focuses the color area', async () => {
         const el = mount('popup');

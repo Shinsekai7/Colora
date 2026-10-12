@@ -6,12 +6,13 @@ import type {PanelContent} from './template.js';
 /**
  * Forwards clicks and keys on buttons, input, formats and swatches to the controller.
  * The controller is passed as getter as it's re-created when the configuration changes.
+ * `revert` is called by the saved color in the preview.
  * Listeners live on the shadow content, so they don't need to be removed.
  */
-export function bindEvents(content: PanelContent, picker: () => Picker) {
+export function bindEvents(content: PanelContent, picker: () => Picker, revert: () => void) {
     const {sheetClose, saved, input, formats, swatches, save, cancel, clear} = content;
 
-    saved.addEventListener('click', () => picker().cancel());
+    saved.addEventListener('click', revert);
 
     input.addEventListener('input', event => {
         // The native event would escape the shadow root, the element dispatches its own

@@ -31,7 +31,7 @@ export const DEFAULT_LABELS: Readonly<Labels> = {
     input: 'Color value',
     formats: 'Color format',
     swatches: 'Swatches',
-    saved: 'Revert to saved color',
+    saved: 'Revert to previous color',
     save: 'Save',
     cancel: 'Cancel',
     clear: 'Clear',

@@ -95,10 +95,11 @@ export function computePosition(
         return fitsBelow || !fitsAbove ? below : above;
     };
 
-    // Position along the cross axis, kept within the viewport
+    // Position along the cross axis, kept within the viewport and the gap away from its edges where there's room
     const crossAxis = (start: number, anchorSize: number, panelSize: number, viewportSize: number) => {
         const position = align === 'start' ? start : align === 'end' ? start + anchorSize - panelSize : start + (anchorSize - panelSize) / 2;
-        return Math.max(0, Math.min(position, viewportSize - panelSize));
+        const margin = Math.min(gap, Math.max(0, (viewportSize - panelSize) / 2));
+        return Math.max(margin, Math.min(position, viewportSize - panelSize - margin));
     };
 
     return vertical ? {
