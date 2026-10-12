@@ -471,9 +471,11 @@ input:focus-visible,
     position: fixed;
     inset: auto 0 0 0;
     width: 100%;
-    max-width: none;
+
+    /* Centered on wider screens, e.g. with presentation="sheet" on a desktop */
+    max-width: 32em;
     max-height: 85vh;
-    margin: 0;
+    margin: 0 auto;
     overflow-y: auto;
     border-radius: 16px 16px 0 0;
     font-size: 1.125rem;

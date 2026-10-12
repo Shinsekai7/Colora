@@ -29,6 +29,36 @@
 </header>
 
 <main>
+    <section class="highlights" aria-labelledby="highlights-title">
+        <h2 id="highlights-title" class="visually-hidden">Highlights</h2>
+        <ul class="highlight-list">
+            <li>
+                <h3>Native popover</h3>
+                <p>Always on top. Clicks outside and <kbd>Esc</kbd> close it, and the focus goes back to where it was.</p>
+            </li>
+            <li>
+                <h3>Your own input</h3>
+                <p>Link the picker to an existing text field with <code>for</code>. Typing and picking stay in sync.</p>
+            </li>
+            <li>
+                <h3>Made for phones</h3>
+                <p>On small touch screens the popup becomes a bottom sheet with touch-sized controls.</p>
+            </li>
+            <li>
+                <h3>Light on the page</h3>
+                <p>Popups only build their controls when first opened, so pages with many pickers stay fast.</p>
+            </li>
+            <li>
+                <h3>Ready for forms</h3>
+                <p>Works like a native input: <code>name</code>, <code>required</code>, reset and disabled fieldsets.</p>
+            </li>
+            <li>
+                <h3>Modern colors</h3>
+                <p>HEX, RGB, HSL, HSV, OKLCH and CMYK, plus all CSS named colors.</p>
+            </li>
+        </ul>
+    </section>
+
     <section class="playground-section" aria-labelledby="playground-title">
         <h2 id="playground-title">Interactive playground</h2>
         <p class="section-description">Try the options and copy the code for your configuration.</p>
@@ -57,6 +87,19 @@
                         <input type="radio" id="display-inline" name="display" value="inline">
                         <label for="display-inline">Inline</label>
                     </div>
+                </fieldset>
+
+                <fieldset class="segmented" id="presentation-control">
+                    <legend>Popup style</legend>
+                    <div class="segments">
+                        <input type="radio" id="presentation-auto" name="presentation" value="auto" checked>
+                        <label for="presentation-auto">Auto</label>
+                        <input type="radio" id="presentation-popover" name="presentation" value="popover">
+                        <label for="presentation-popover">Popover</label>
+                        <input type="radio" id="presentation-sheet" name="presentation" value="sheet">
+                        <label for="presentation-sheet">Sheet</label>
+                    </div>
+                    <p class="field-hint">Auto slides up from the bottom on phones.</p>
                 </fieldset>
 
                 <fieldset class="segmented">

@@ -143,7 +143,7 @@ Opening a picker closes other open popups on the page, except ones it's inside o
 On small touch screens the popup slides up from the bottom of the screen as a sheet, with bigger controls and a close button.
 That's `presentation="auto"`: it applies when `(pointer: coarse) and (max-width: 640px)` matches, and switches when that changes, e.g. when rotating a tablet.
 Pickers linked to an input stay a popover, since the keyboard would compete with the sheet for the space.
-Set `presentation="popover"` or `presentation="sheet"` to always use one.
+Set `presentation="popover"` or `presentation="sheet"` to always use one. On wider screens the sheet is centered.
 
 ## Using an existing input
 

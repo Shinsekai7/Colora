@@ -26,10 +26,11 @@ const valueOutput = document.getElementById('value');
 const eventList = document.getElementById('events');
 const code = document.getElementById('code');
 const placement = form.elements.placement;
+const presentation = document.getElementById('presentation-control');
 
+// Added to the page once configured, so the popup only builds its controls when first opened
 const picker = document.createElement('colora-picker');
 picker.setAttribute('value', '#5856d6');
-stage.append(picker);
 
 // Shown with the "Linked input" trigger, the picker is linked to it
 const textInput = document.createElement('input');
@@ -46,6 +47,7 @@ function readConfig() {
     return {
         theme: data.get('theme'),
         popup: data.get('display') === 'popup',
+        presentation: data.get('presentation'),
         linked: data.get('trigger') === 'input',
         dark: data.get('appearance') === 'dark',
         formats: data.getAll('formats'),
@@ -66,7 +68,8 @@ function attributesOf(config) {
         ['for', config.linked ? 'color' : null],
         ['theme', config.theme !== 'horizontal' ? config.theme : null],
         ['popup', config.popup ? '' : null],
-        ['placement', config.popup && config.placement !== 'bottom' ? config.placement : null],
+        ['presentation', config.popup && config.presentation !== 'auto' ? config.presentation : null],
+        ['placement', config.popup && config.presentation !== 'sheet' && config.placement !== 'bottom' ? config.placement : null],
         ['formats', formats !== DEFAULT_FORMATS ? formats : null],
         ['buttons', config.buttons.length ? config.buttons.join(' ') : null],
         ['hide', config.hidden.length ? config.hidden.join(' ') : null],
@@ -82,7 +85,7 @@ function apply() {
     const config = readConfig();
     const attributes = new Map(attributesOf(config));
 
-    for (const name of ['theme', 'popup', 'placement', 'formats', 'buttons', 'hide', 'swatches', 'lock-opacity', 'disabled']) {
+    for (const name of ['theme', 'popup', 'presentation', 'placement', 'formats', 'buttons', 'hide', 'swatches', 'lock-opacity', 'disabled']) {
         if (attributes.has(name)) {
             picker.setAttribute(name, attributes.get(name));
         } else {
@@ -109,7 +112,8 @@ function apply() {
     }
 
     stage.classList.toggle('dark', config.dark);
-    placement.disabled = !config.popup;
+    presentation.disabled = !config.popup;
+    placement.disabled = !config.popup || config.presentation === 'sheet';
     render(config);
 }
 
@@ -270,3 +274,4 @@ for (const button of document.querySelectorAll('[data-copy]')) {
 }
 
 apply();
+stage.append(picker);
