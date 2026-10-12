@@ -1,8 +1,8 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {cmyk, hex, hsv, rgb} from '../color/index.js';
-import type {HSVA} from '../color/index.js';
-import {createPicker} from './picker.js';
-import type {Picker, PickerEvents} from './types.js';
+import {cmyk, hex, hsv, rgb} from '../../src/color/index.js';
+import type {HSVA} from '../../src/color/index.js';
+import {createPicker} from '../../src/state/picker.js';
+import type {Picker, PickerEvents} from '../../src/state/types.js';
 
 const toHex = (color: HSVA | null) => color && hex.stringify(color);
 

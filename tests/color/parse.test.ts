@@ -1,8 +1,8 @@
 import fc from 'fast-check';
 import {describe, expect, it} from 'vitest';
-import {sameColor} from './compare.js';
-import {cmyk} from './formats/cmyk.js';
-import {defaultFormats, fillPowerless, normalizeHsva, parseColor} from './parse.js';
+import {sameColor} from '../../src/color/compare.js';
+import {cmyk} from '../../src/color/formats/cmyk.js';
+import {defaultFormats, fillPowerless, normalizeHsva, parseColor} from '../../src/color/parse.js';
 
 describe('parseColor', () => {
     it.each([

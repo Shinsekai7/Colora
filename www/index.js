@@ -4,60 +4,241 @@ import {define} from '/src/elements/index.ts';
 // `import '/src/define.ts'` would be removed from the production build
 define();
 
-const pickerContainer = document.querySelector('.colora-container');
-const themeContainer = document.querySelector('.theme-container');
-
-const swatches = [
-    'rgb(244 67 54)',
-    'rgb(233 30 99 / 0.95)',
-    'rgb(156 39 176 / 0.9)',
-    'rgb(103 58 183 / 0.85)',
-    'rgb(63 81 181 / 0.8)',
-    'rgb(33 150 243 / 0.75)',
-    'rgb(3 169 244 / 0.7)',
-    'rgb(0 188 212 / 0.7)',
-    'rgb(0 150 136 / 0.75)',
-    'rgb(76 175 80 / 0.8)',
-    'rgb(139 195 74 / 0.85)',
-    'rgb(205 220 57 / 0.9)',
-    'rgb(255 235 59 / 0.95)',
-    'rgb(255 193 7)'
+const SWATCHES = [
+    '#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5',
+    '#2196f3', '#00bcd4', '#4caf50', '#ffeb3b', 'rgb(255 152 0 / 0.8)'
 ];
 
-const themes = {
-    classic: {swatches, formats: 'hex rgb hsl oklch'},
-    monolith: {swatches: swatches.slice(0, 7), formats: 'hex'},
-    nano: {swatches: swatches.slice(0, 7), formats: 'hex'}
+const DEFAULT_FORMATS = 'hex rgb hsl';
+
+// Custom properties for a dark picker
+const DARK = {
+    '--cp-background': '#1f2128',
+    '--cp-text': '#c9ccd3',
+    '--cp-control-background': '#2c2f38',
+    '--cp-shadow': '0 0.15em 1.5em 0 rgb(0 0 0 / 0.5)',
+    '--cp-checkerboard': 'repeating-conic-gradient(#555 0% 25%, #333 0% 50%) 0 0 / 0.5em 0.5em'
 };
 
-const buttons = [];
+const form = document.getElementById('controls');
+const stage = document.getElementById('stage');
+const valueOutput = document.getElementById('value');
+const eventList = document.getElementById('events');
+const code = document.getElementById('code');
+const placement = form.elements.placement;
 
-for (const [theme, {swatches, formats}] of Object.entries(themes)) {
-    const button = document.createElement('button');
-    button.textContent = theme;
-    buttons.push(button);
+const picker = document.createElement('colora-picker');
+picker.setAttribute('value', '#5856d6');
+stage.append(picker);
 
-    button.addEventListener('click', () => {
-        for (const btn of buttons) {
-            btn.classList.toggle('active', btn === button);
-        }
+/** Reads the form into a configuration. */
+function readConfig() {
+    const data = new FormData(form);
+    const shown = data.getAll('show');
 
-        const picker = document.createElement('colora-picker');
-        picker.setAttribute('popup', '');
-        picker.setAttribute('theme', theme);
-        picker.setAttribute('formats', formats);
-        picker.setAttribute('buttons', 'clear save');
-        picker.setAttribute('value', '#ff0000');
-        picker.swatches = swatches;
-
-        for (const type of ['input', 'change', 'cancel', 'open', 'close']) {
-            picker.addEventListener(type, () => console.log(`Event: "${type}"`, {value: picker.value, current: picker.currentValue}));
-        }
-
-        pickerContainer.replaceChildren(picker);
-    });
-
-    themeContainer.appendChild(button);
+    return {
+        theme: data.get('theme'),
+        popup: data.get('display') === 'popup',
+        dark: data.get('appearance') === 'dark',
+        formats: data.getAll('formats'),
+        buttons: data.getAll('buttons'),
+        hidden: ['preview', 'hue', 'input'].filter(part => !shown.includes(part)),
+        swatches: data.has('swatches'),
+        opacity: data.has('opacity'),
+        disabled: data.has('disabled'),
+        placement: data.get('placement')
+    };
 }
 
-buttons[0].click();
+/** Attributes for a configuration, defaults are left out. Boolean attributes have an empty value. */
+function attributesOf(config) {
+    const formats = config.formats.join(' ');
+
+    const attributes = [
+        ['theme', config.theme !== 'horizontal' ? config.theme : null],
+        ['popup', config.popup ? '' : null],
+        ['placement', config.popup && config.placement !== 'bottom' ? config.placement : null],
+        ['formats', formats !== DEFAULT_FORMATS ? formats : null],
+        ['buttons', config.buttons.length ? config.buttons.join(' ') : null],
+        ['hide', config.hidden.length ? config.hidden.join(' ') : null],
+        ['swatches', config.swatches ? SWATCHES.join(' ') : null],
+        ['lock-opacity', config.opacity ? null : ''],
+        ['disabled', config.disabled ? '' : null]
+    ];
+
+    return attributes.filter(([, value]) => value !== null);
+}
+
+function apply() {
+    const config = readConfig();
+    const attributes = new Map(attributesOf(config));
+
+    for (const name of ['theme', 'popup', 'placement', 'formats', 'buttons', 'hide', 'swatches', 'lock-opacity', 'disabled']) {
+        if (attributes.has(name)) {
+            picker.setAttribute(name, attributes.get(name));
+        } else {
+            picker.removeAttribute(name);
+        }
+    }
+
+    // The picker's popup is in the top layer, the stage only gets darker for the inline one
+    for (const [property, value] of Object.entries(DARK)) {
+        if (config.dark) {
+            picker.style.setProperty(property, value);
+        } else {
+            picker.style.removeProperty(property);
+        }
+    }
+
+    stage.classList.toggle('dark', config.dark);
+    placement.disabled = !config.popup;
+    render(config);
+}
+
+/** Shows the value and the code for the current configuration. */
+function render(config = readConfig()) {
+    valueOutput.textContent = picker.value || '(cleared)';
+    renderCode(config);
+}
+
+/* Code */
+
+const token = (text, type) => ({text, type});
+
+function codeLines(config) {
+    const attributes = attributesOf(config);
+
+    if (picker.value) {
+        attributes.unshift(['value', picker.value]);
+    }
+
+    const attributeTokens = ([name, value]) => value === ''
+        ? [token(name, 'attr')]
+        : [token(name, 'attr'), token('="'), token(value, 'value'), token('"')];
+
+    const lines = [
+        [token('<script', 'tag'), token(' '), token('type', 'attr'), token('="'), token('module', 'value'), token('"'), token('>', 'tag')],
+        [token('    import '), token("'@shinsekai/colora/define'", 'value'), token(';')],
+        [token('</script>', 'tag')],
+        []
+    ];
+
+    if (attributes.length <= 1) {
+        lines.push([
+            token('<colora-picker', 'tag'),
+            ...attributes.flatMap(attribute => [token(' '), ...attributeTokens(attribute)]),
+            token('></colora-picker>', 'tag')
+        ]);
+    } else {
+        lines.push([token('<colora-picker', 'tag')]);
+        attributes.forEach((attribute, index) => lines.push([
+            token('    '),
+            ...attributeTokens(attribute),
+            ...(index === attributes.length - 1 ? [token('>', 'tag')] : [])
+        ]));
+        lines.push([token('</colora-picker>', 'tag')]);
+    }
+
+    if (config.dark) {
+        lines.push([], [token('<style>', 'tag')], [token('    colora-picker {')]);
+
+        for (const [property, value] of Object.entries(DARK)) {
+            lines.push([token('        '), token(property, 'attr'), token(': '), token(value, 'value'), token(';')]);
+        }
+
+        lines.push([token('    }')], [token('</style>', 'tag')]);
+    }
+
+    return lines;
+}
+
+let codeText = '';
+
+function renderCode(config) {
+    const lines = codeLines(config);
+    codeText = lines.map(line => line.map(t => t.text).join('')).join('\n');
+
+    code.replaceChildren(...lines.flatMap((line, index) => [
+        ...line.map(({text, type}) => {
+            if (!type) {
+                return document.createTextNode(text);
+            }
+
+            const span = document.createElement('span');
+            span.className = `tok-${type}`;
+            span.textContent = text;
+            return span;
+        }),
+        ...(index < lines.length - 1 ? [document.createTextNode('\n')] : [])
+    ]));
+}
+
+/* Events */
+
+function logEvent(type) {
+    const last = eventList.firstElementChild;
+
+    // Repeated input events while dragging are counted instead of listed one by one
+    if (last?.dataset.type === type) {
+        last.dataset.count = String(Number(last.dataset.count) + 1);
+        last.textContent = `${type} ×${last.dataset.count}`;
+        return;
+    }
+
+    const item = document.createElement('li');
+    item.dataset.type = type;
+    item.dataset.count = '1';
+    item.textContent = type;
+    eventList.prepend(item);
+
+    while (eventList.children.length > 6) {
+        eventList.lastElementChild.remove();
+    }
+}
+
+for (const type of ['input', 'change', 'cancel', 'open', 'close']) {
+    picker.addEventListener(type, () => {
+        logEvent(type);
+        render();
+    });
+}
+
+/* Controls */
+
+form.addEventListener('change', event => {
+    const {target} = event;
+
+    // At least one format has to stay selected
+    if (target.name === 'formats' && !form.querySelector('input[name="formats"]:checked')) {
+        target.checked = true;
+    }
+
+    apply();
+});
+
+/* Copy buttons */
+
+async function copy(button, text) {
+    const label = button.textContent;
+
+    try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
+    } catch {
+        button.textContent = 'Copy failed';
+    }
+
+    setTimeout(() => {
+        button.textContent = label;
+        button.classList.remove('copied');
+    }, 1500);
+}
+
+document.getElementById('copy-code').addEventListener('click', event => copy(event.currentTarget, codeText));
+
+for (const button of document.querySelectorAll('[data-copy]')) {
+    button.addEventListener('click', () => copy(button, button.dataset.copy));
+}
+
+apply();

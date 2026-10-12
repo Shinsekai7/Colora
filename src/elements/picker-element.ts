@@ -13,7 +13,7 @@ import {renderFormats, renderLabels, renderState, renderVisibility} from './rend
 import {createShadowContent} from './template.js';
 import type {Elements} from './template.js';
 
-export type Theme = 'classic' | 'monolith' | 'nano';
+export type Theme = 'horizontal' | 'vertical' | 'compact';
 
 // Lets this module be imported on servers (SSR) where there's no DOM, the element is only usable in browsers
 const BaseElement = (typeof HTMLElement === 'undefined' ? class {} : HTMLElement) as typeof HTMLElement;
@@ -257,7 +257,7 @@ export class ColorPickerElement extends BaseElement {
 
     get #theme(): Theme {
         const theme = this.getAttribute('theme');
-        return theme === 'monolith' || theme === 'nano' ? theme : 'classic';
+        return theme === 'vertical' || theme === 'compact' ? theme : 'horizontal';
     }
 
     #tokens(attribute: string) {
@@ -328,7 +328,8 @@ export class ColorPickerElement extends BaseElement {
 
     #createSliders() {
         this.#sliders?.destroy();
-        this.#sliders = bindSliders(this.#els, () => this.#picker, this.#theme === 'classic' ? 'vertical' : 'horizontal');
+        // The horizontal layout places the sliders next to the color area, so they run vertically
+        this.#sliders = bindSliders(this.#els, () => this.#picker, this.#theme === 'horizontal' ? 'vertical' : 'horizontal');
     }
 
     #updateMode() {

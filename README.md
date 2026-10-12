@@ -48,7 +48,7 @@ All styles are part of the JavaScript, there's no stylesheet to include.
 <colora-picker value="#42445a"></colora-picker>
 
 <!-- A button opening the picker -->
-<colora-picker value="#42445a" popup theme="nano"></colora-picker>
+<colora-picker value="#42445a" popup theme="compact"></colora-picker>
 
 <!-- With your own button -->
 <colora-picker popup>
@@ -63,7 +63,7 @@ All styles are part of the JavaScript, there's no stylesheet to include.
 <!-- Everything -->
 <colora-picker
     value="rgb(66 68 90)"
-    theme="classic"
+    theme="horizontal"
     formats="hex rgb hsl oklch"
     swatches="#f44336 #e91e63 rgb(156, 39, 176) hsl(262 52% 47% / 0.85)"
     buttons="save cancel clear"
@@ -87,7 +87,7 @@ picker.addEventListener('change', () => console.log('committed', picker.value));
 | `name` | Name for form submission. |
 | `popup` | Shows a button that opens the picker in a popover, instead of showing it inline. |
 | `placement` | Where the popup opens: `top`, `bottom` (default), `left` or `right`, optionally with `-start` or `-end`. Flips if there's no space. |
-| `theme` | `classic` (default), `monolith` or `nano`. |
+| `theme` | The layout: `horizontal` (default, wide, sliders next to the color area), `vertical` (narrow, everything stacked) or `compact` (narrow, color area on top with a round preview). |
 | `formats` | Formats the user can switch between, default `hex rgb hsl`. Available: `hex`, `rgb`, `hsl`, `hsv`, `oklch`, `cmyk`. |
 | `format` | Initially selected format. |
 | `swatches` | Colors to choose from, separated by spaces or commas. |
@@ -158,21 +158,27 @@ Parts: `trigger`, `panel`, `selection`, `preview`, `saved`, `current`, `area`, `
 
 ## Translations
 
+All texts and accessible names can be changed through the `i18n` property. These are all labels with their default texts, set only the ones you want to change:
+
 ```js
 picker.i18n = {
-    dialog: 'Selector de culori',
-    toggle: 'Alege culoare',
-    area: 'Saturație și luminozitate',
-    hue: 'Nuanţă',
-    alpha: 'Opacitate',
-    input: 'Valoarea culorii',
-    save: 'Salvează',
-    cancel: 'Anulează',
-    clear: 'Golește'
+    dialog: 'Color picker',                // Accessible name of the popup
+    toggle: 'Choose color',                // Accessible name of the button opening the popup
+    area: 'Saturation and brightness',     // Accessible name of the color area
+    areaRole: '2D slider',                 // Announced type of the color area
+    hue: 'Hue',                            // Accessible name of the hue slider
+    alpha: 'Opacity',                      // Accessible name of the opacity slider
+    input: 'Color value',                  // Accessible name of the text field
+    formats: 'Color format',               // Accessible name of the format buttons
+    swatches: 'Swatches',                  // Accessible name of the swatches
+    saved: 'Revert to saved color',        // Accessible name of the saved color in the preview
+    save: 'Save',                          // Text of the save button
+    cancel: 'Cancel',                      // Text of the cancel button
+    clear: 'Clear'                         // Text of the clear button
 };
 ```
 
-See `DEFAULT_LABELS` for all keys.
+The defaults are also exported as `DEFAULT_LABELS`.
 
 ## Colors
 

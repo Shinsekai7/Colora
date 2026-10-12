@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {areaKey, sliderKey} from './keys.js';
+import {areaKey, sliderKey} from '../../src/interactions/keys.js';
 
 const key = (key: string, modifiers: Partial<Record<'shiftKey' | 'altKey' | 'ctrlKey' | 'metaKey', boolean>> = {}) => ({
     key,

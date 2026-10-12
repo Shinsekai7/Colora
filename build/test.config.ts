@@ -8,8 +8,8 @@ export default defineConfig({
             {
                 test: {
                     name: 'unit',
-                    include: ['src/**/*.test.ts'],
-                    exclude: ['src/**/*.browser.test.ts'],
+                    include: ['tests/**/*.test.ts'],
+                    exclude: ['tests/**/*.browser.test.ts'],
                     setupFiles: ['build/test.setup.ts'],
                     environment: 'node'
                 }
@@ -17,7 +17,7 @@ export default defineConfig({
             {
                 test: {
                     name: 'browser',
-                    include: ['src/**/*.browser.test.ts'],
+                    include: ['tests/**/*.browser.test.ts'],
                     browser: {
                         enabled: true,
                         headless: true,

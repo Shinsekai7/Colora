@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {createEmitter} from './emitter.js';
+import {createEmitter} from '../../src/state/emitter.js';
 
 interface Events {
     a: number;

@@ -1,9 +1,9 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {commands, userEvent} from 'vitest/browser';
-import {createPicker} from '../state/index.js';
-import {createArea, createSlider} from './controls.js';
-import {createDrag} from './drag.js';
-import type {Point} from './keys.js';
+import {createPicker} from '../../src/state/index.js';
+import {createArea, createSlider} from '../../src/interactions/controls.js';
+import {createDrag} from '../../src/interactions/drag.js';
+import type {Point} from '../../src/interactions/keys.js';
 
 // Every fixture is 200 x 100 px with its top left corner at (50, 50)
 const LEFT = 50;

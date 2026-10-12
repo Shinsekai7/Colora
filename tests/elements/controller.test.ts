@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
-import {cmyk, hex, rgb} from '../color/index.js';
-import {createController, resolveFormats} from './controller.js';
-import type {ControllerConfig} from './controller.js';
+import {cmyk, hex, rgb} from '../../src/color/index.js';
+import {createController, resolveFormats} from '../../src/elements/controller.js';
+import type {ControllerConfig} from '../../src/elements/controller.js';
 
 const CONFIG: ControllerConfig = {
     formats: [hex, rgb],

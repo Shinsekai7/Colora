@@ -1,15 +1,15 @@
 import colorNames from 'color-name';
 import fc from 'fast-check';
 import {describe, expect, it} from 'vitest';
-import {hsvToRgb} from './convert.js';
-import {cmyk} from './formats/cmyk.js';
-import {hex} from './formats/hex.js';
-import {hsl} from './formats/hsl.js';
-import {hsv} from './formats/hsv.js';
-import {named, NAMED_COLORS} from './formats/named.js';
-import {oklch} from './formats/oklch.js';
-import {rgb} from './formats/rgb.js';
-import type {HSVA, OutputFormat, ParsedColor} from './types.js';
+import {hsvToRgb} from '../../src/color/convert.js';
+import {cmyk} from '../../src/color/formats/cmyk.js';
+import {hex} from '../../src/color/formats/hex.js';
+import {hsl} from '../../src/color/formats/hsl.js';
+import {hsv} from '../../src/color/formats/hsv.js';
+import {named, NAMED_COLORS} from '../../src/color/formats/named.js';
+import {oklch} from '../../src/color/formats/oklch.js';
+import {rgb} from '../../src/color/formats/rgb.js';
+import type {HSVA, OutputFormat, ParsedColor} from '../../src/color/types.js';
 
 // #42445A, the default color
 const SLATE: HSVA = {h: 235, s: (24 / 90) * 100, v: (90 / 255) * 100, a: 1};

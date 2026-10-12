@@ -17,7 +17,7 @@ assignees: ''
 #### Your environment:
 ```
 Version (see package.json):
-Theme (classic, monolith or nano): 
+Theme (horizontal, vertical or compact): 
 Browser-version:  
 Operating-system:  
 ```

@@ -1,8 +1,8 @@
 import {converter, differenceEuclidean, toGamut} from 'culori';
 import fc from 'fast-check';
 import {describe, expect, it} from 'vitest';
-import {cmykToRgb, hslToHsv, hsvToHsl, hsvToRgb, oklchToRgb, rgbToCmyk, rgbToHsv, rgbToOklch} from './convert.js';
-import type {RGB} from './types.js';
+import {cmykToRgb, hslToHsv, hsvToHsl, hsvToRgb, oklchToRgb, rgbToCmyk, rgbToHsv, rgbToOklch} from '../../src/color/convert.js';
+import type {RGB} from '../../src/color/types.js';
 
 const unit = fc.double({min: 0, max: 1, noNaN: true});
 const anyRgb = fc.record({r: unit, g: unit, b: unit});

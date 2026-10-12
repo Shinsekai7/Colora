@@ -5,8 +5,8 @@ describe('without a DOM', () => {
     it('can import every entry point', async () => {
         expect(typeof HTMLElement).toBe('undefined');
 
-        const lib = await import('./index.js');
-        await import('./define.js');
+        const lib = await import('../src/index.js');
+        await import('../src/define.js');
 
         expect(lib.parseColor('#fff')?.format).toBe('hex');
         expect(lib.createPicker().getState().text).toBe('#42445A');

@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {computePosition, parseList, parsePlacement, toPositionArea} from './attributes.js';
+import {computePosition, parseList, parsePlacement, toPositionArea} from '../../src/elements/attributes.js';
 
 describe('parseList', () => {
     it.each([

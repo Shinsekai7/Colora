@@ -1,7 +1,7 @@
 import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
 import {commands, userEvent} from 'vitest/browser';
-import {cmyk} from '../color/index.js';
-import {ColorPickerElement, define} from './index.js';
+import {cmyk} from '../../src/color/index.js';
+import {ColorPickerElement, define} from '../../src/elements/index.js';
 
 beforeAll(() => define());
 
@@ -11,7 +11,7 @@ afterEach(async () => {
     document.body.replaceChildren();
 });
 
-/** Creates `<colora-picker>` from an attribute string, e.g. `mount('popup theme="nano"')`. */
+/** Creates `<colora-picker>` from an attribute string, e.g. `mount('popup theme="compact"')`. */
 const mount = (attributes = '', container: HTMLElement = document.body) => {
     container.insertAdjacentHTML('beforeend', `<colora-picker ${attributes}></colora-picker>`);
     return container.lastElementChild as ColorPickerElement;
@@ -110,10 +110,10 @@ describe('attributes', () => {
     });
 
     it('lays out sliders per theme', () => {
-        const el = mount('theme="nano"');
+        const el = mount('theme="compact"');
         expect(part(el, '.hue').getAttribute('aria-orientation')).toBe('horizontal');
 
-        el.setAttribute('theme', 'classic');
+        el.setAttribute('theme', 'horizontal');
         expect(part(el, '.alpha').getAttribute('aria-orientation')).toBe('vertical');
     });
 
@@ -160,17 +160,17 @@ describe('properties', () => {
 
     it('applies labels as text, never as HTML', () => {
         const el = mount('buttons="save"');
-        el.i18n = {save: '<img src=x onerror=alert(1)>', hue: 'Farbton'};
+        el.i18n = {save: '<img src=x onerror=alert(1)>', hue: 'Tono'};
 
         expect(part(el, '.save').textContent).toBe('<img src=x onerror=alert(1)>');
         expect(part(el, '.save').children).toHaveLength(0);
-        expect(part(el, '.hue').getAttribute('aria-label')).toBe('Farbton');
+        expect(part(el, '.hue').getAttribute('aria-label')).toBe('Tono');
     });
 });
 
 describe('editing', () => {
     it('updates the value live while dragging, change on release', async () => {
-        const el = mount('theme="monolith"');
+        const el = mount('theme="vertical"');
         const log = record(el);
         const area = part(el, '.area');
         const {left, top, width, height} = area.getBoundingClientRect();
@@ -266,7 +266,7 @@ describe('editing', () => {
 
 describe('with a save button', () => {
     it('only commits on save', async () => {
-        const el = mount('buttons="save cancel" theme="nano"');
+        const el = mount('buttons="save cancel" theme="compact"');
         const log = record(el);
 
         el.picker.adjust({h: 0, s: 100, v: 100});
@@ -424,19 +424,19 @@ describe('popup', () => {
         };
 
         it('places the panel below the trigger', () => {
-            const {trigger, panel} = open('theme="nano"', 'left: 150px; top: 20px');
+            const {trigger, panel} = open('theme="compact"', 'left: 150px; top: 20px');
 
             expect(panel.top).toBeCloseTo(trigger.bottom + 8, 0);
             expect(panel.left + panel.width / 2).toBeCloseTo(trigger.left + trigger.width / 2, 0);
         });
 
         it('aligns to the start', () => {
-            const {trigger, panel} = open('theme="nano" placement="bottom-start"', 'left: 150px; top: 20px');
+            const {trigger, panel} = open('theme="compact" placement="bottom-start"', 'left: 150px; top: 20px');
             expect(panel.left).toBeCloseTo(trigger.left, 0);
         });
 
         it('flips above the trigger if there is no space below', () => {
-            const {trigger, panel} = open('theme="nano"', 'left: 150px; bottom: 20px');
+            const {trigger, panel} = open('theme="compact"', 'left: 150px; bottom: 20px');
             expect(panel.bottom).toBeCloseTo(trigger.top - 8, 0);
         });
     });

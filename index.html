@@ -9,21 +9,142 @@
 
     <title>Colora</title>
 
-    <link rel="icon" href="www/favicon.svg" type="image/svg+xml"/>
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400&display=swap" rel="stylesheet">
+    <link rel="icon" href="www/Colora.png" type="image/png"/>
     <link href="www/index.css" rel="stylesheet"/>
 </head>
 
 <body>
-<header>
-    <h1>Colora. Keep it simple.</h1>
+<header class="hero">
+    <img class="logo" src="www/Colora.png" alt="" width="64" height="64">
+    <h1>Colora</h1>
+    <p class="tagline">Accessible color picker web component for any framework, with OKLCH support and zero dependencies.</p>
+
+    <div class="hero-actions">
+        <div class="install">
+            <code>npm install @shinsekai/colora</code>
+            <button type="button" class="copy" data-copy="npm install @shinsekai/colora">Copy</button>
+        </div>
+        <a class="github" href="https://github.com/Shinsekai7/Colora">GitHub</a>
+    </div>
 </header>
 
 <main>
-    <div class="theme-container"></div>
-    <div class="colora-container"></div>
-    <p>(Tap it)</p>
+    <section class="playground-section" aria-labelledby="playground-title">
+        <h2 id="playground-title">Interactive playground</h2>
+        <p class="section-description">Try the options and copy the code for your configuration.</p>
+
+        <div class="playground">
+            <form class="controls" id="controls">
+                <h3>Configuration</h3>
+
+                <fieldset class="segmented">
+                    <legend>Theme</legend>
+                    <div class="segments">
+                        <input type="radio" id="theme-horizontal" name="theme" value="horizontal" checked>
+                        <label for="theme-horizontal">Horizontal</label>
+                        <input type="radio" id="theme-vertical" name="theme" value="vertical">
+                        <label for="theme-vertical">Vertical</label>
+                        <input type="radio" id="theme-compact" name="theme" value="compact">
+                        <label for="theme-compact">Compact</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="segmented">
+                    <legend>Display</legend>
+                    <div class="segments">
+                        <input type="radio" id="display-popup" name="display" value="popup" checked>
+                        <label for="display-popup">Popup</label>
+                        <input type="radio" id="display-inline" name="display" value="inline">
+                        <label for="display-inline">Inline</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="segmented">
+                    <legend>Appearance</legend>
+                    <div class="segments">
+                        <input type="radio" id="appearance-light" name="appearance" value="light" checked>
+                        <label for="appearance-light">Light</label>
+                        <input type="radio" id="appearance-dark" name="appearance" value="dark">
+                        <label for="appearance-dark">Dark</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="chips">
+                    <legend>Formats</legend>
+                    <div class="chip-list">
+                        <label><input type="checkbox" name="formats" value="hex" checked> HEX</label>
+                        <label><input type="checkbox" name="formats" value="rgb" checked> RGB</label>
+                        <label><input type="checkbox" name="formats" value="hsl" checked> HSL</label>
+                        <label><input type="checkbox" name="formats" value="hsv"> HSV</label>
+                        <label><input type="checkbox" name="formats" value="oklch"> OKLCH</label>
+                        <label><input type="checkbox" name="formats" value="cmyk"> CMYK</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="chips">
+                    <legend>Buttons</legend>
+                    <div class="chip-list">
+                        <label><input type="checkbox" name="buttons" value="save"> Save</label>
+                        <label><input type="checkbox" name="buttons" value="cancel"> Cancel</label>
+                        <label><input type="checkbox" name="buttons" value="clear"> Clear</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="checks">
+                    <legend>Show</legend>
+                    <label><input type="checkbox" name="show" value="preview" checked> Color preview</label>
+                    <label><input type="checkbox" name="show" value="hue" checked> Hue slider</label>
+                    <label><input type="checkbox" name="show" value="input" checked> Text input</label>
+                    <label><input type="checkbox" name="swatches" checked> Swatches</label>
+                    <label><input type="checkbox" name="opacity" checked> Transparency</label>
+                    <label><input type="checkbox" name="disabled"> Disabled</label>
+                </fieldset>
+
+                <label class="select" id="placement-control">
+                    <span>Popup placement</span>
+                    <select name="placement">
+                        <option value="bottom">Bottom</option>
+                        <option value="bottom-start">Bottom start</option>
+                        <option value="bottom-end">Bottom end</option>
+                        <option value="top">Top</option>
+                        <option value="top-start">Top start</option>
+                        <option value="top-end">Top end</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                    </select>
+                </label>
+            </form>
+
+            <div class="output">
+                <section class="live" aria-labelledby="live-title">
+                    <h3 id="live-title">Live demo</h3>
+                    <div class="stage" id="stage"></div>
+
+                    <dl class="readout">
+                        <dt>Value</dt>
+                        <dd><output id="value" aria-live="polite"></output></dd>
+                        <dt>Events</dt>
+                        <dd><ol class="events" id="events" aria-label="Last events"></ol></dd>
+                    </dl>
+                </section>
+
+                <section class="code" aria-labelledby="code-title">
+                    <div class="code-header">
+                        <h3 id="code-title">Configuration code</h3>
+                        <button type="button" class="copy" id="copy-code">Copy</button>
+                    </div>
+                    <pre><code id="code"></code></pre>
+                    <p class="hint">Options with default values are left out. All options are described in the
+                        <a href="https://github.com/Shinsekai7/Colora#readme">documentation</a>.</p>
+                </section>
+            </div>
+        </div>
+    </section>
 </main>
+
+<footer>
+    <p>MIT licensed. Made with color.</p>
+</footer>
 
 <script src="www/index.js" type="module"></script>
 </body>
