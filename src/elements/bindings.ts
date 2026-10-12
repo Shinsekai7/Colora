@@ -1,17 +1,16 @@
 import {createArea, createSlider} from '../interactions/index.js';
 import type {Disposable} from '../interactions/index.js';
 import type {Picker} from '../state/index.js';
-import type {Elements} from './template.js';
+import type {PanelContent} from './template.js';
 
 /**
  * Forwards clicks and keys on buttons, input, formats and swatches to the controller.
  * The controller is passed as getter as it's re-created when the configuration changes.
  * Listeners live on the shadow content, so they don't need to be removed.
  */
-export function bindEvents(els: Elements, picker: () => Picker) {
-    const {anchor, saved, input, formats, swatches, save, cancel, clear} = els;
+export function bindEvents(content: PanelContent, picker: () => Picker) {
+    const {sheetClose, saved, input, formats, swatches, save, cancel, clear} = content;
 
-    anchor.addEventListener('click', () => picker().toggle());
     saved.addEventListener('click', () => picker().cancel());
 
     input.addEventListener('input', event => {
@@ -65,14 +64,15 @@ export function bindEvents(els: Elements, picker: () => Picker) {
     save.addEventListener('click', closeAfter(p => p.save()));
     cancel.addEventListener('click', closeAfter(p => p.cancel()));
     clear.addEventListener('click', closeAfter(p => p.clear()));
+    sheetClose.addEventListener('click', () => picker().close());
 }
 
 /**
  * Makes the color area and sliders draggable and keyboard accessible.
  * Vertical sliders have 0 at the bottom, so arrow keys move them in their direction.
  */
-export function bindSliders(els: Elements, picker: () => Picker, orientation: 'horizontal' | 'vertical'): Disposable {
-    const {area, hue, alpha} = els;
+export function bindSliders(content: PanelContent, picker: () => Picker, orientation: 'horizontal' | 'vertical'): Disposable {
+    const {area, hue, alpha} = content;
     const vertical = orientation === 'vertical';
     const color = () => picker().getState().color;
     const onCommit = () => picker().adjustEnd();

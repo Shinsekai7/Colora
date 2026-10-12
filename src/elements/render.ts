@@ -2,7 +2,7 @@ import {hex, hsvToRgb, sameColor} from '../color/index.js';
 import type {HSVA, OutputFormat} from '../color/index.js';
 import type {PickerState} from '../state/index.js';
 import type {Labels} from './labels.js';
-import type {Elements} from './template.js';
+import type {PanelContent, Shell} from './template.js';
 
 const rgbString = (color: HSVA, alpha = color.a) => {
     const {r, g, b} = hsvToRgb(color);
@@ -16,12 +16,9 @@ function setAria(element: HTMLElement, now: number, text: string) {
     element.setAttribute('aria-valuetext', text);
 }
 
-/**
- * Renders the state. Visuals are driven by custom properties on the root, see picker.css.
- * Swatches are only re-created if they changed since `previous`.
- */
-export function renderState(els: Elements, state: PickerState, previous?: PickerState) {
-    const {root, trigger, panel, area, hue, alpha, input, formats, swatches} = els;
+/** Renders the state on the trigger. Visuals are driven by custom properties on the root, see picker.css. */
+export function renderShell(shell: Shell, state: PickerState) {
+    const {root, trigger, panel} = shell;
     const {color, saved} = state;
 
     root.style.setProperty('--cp-hue', String(color.h));
@@ -36,6 +33,12 @@ export function renderState(els: Elements, state: PickerState, previous?: Picker
     trigger.disabled = state.disabled;
     trigger.setAttribute('aria-expanded', String(state.open));
     panel.inert = state.disabled;
+}
+
+/** Renders the state on the panel's controls. Swatches are only re-created if they changed since `previous`. */
+export function renderPanel(content: PanelContent, state: PickerState, previous?: PickerState) {
+    const {area, hue, alpha, input, formats, swatches} = content;
+    const {color} = state;
 
     setAria(area, Math.round(color.s), `${percent(color.s)}, ${percent(color.v)}`);
     setAria(hue, Math.round(color.h), `${Math.round(color.h)}°`);
@@ -75,8 +78,8 @@ export function renderState(els: Elements, state: PickerState, previous?: Picker
 }
 
 /** Re-creates the format buttons, their selection is rendered by `renderState`. */
-export function renderFormats(els: Elements, formats: readonly OutputFormat[]) {
-    els.formats.replaceChildren(...formats.map(format => {
+export function renderFormats(content: PanelContent, formats: readonly OutputFormat[]) {
+    content.formats.replaceChildren(...formats.map(format => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'format';
@@ -98,8 +101,8 @@ export interface Visibility {
     lockOpacity: boolean;
 }
 
-export function renderVisibility(els: Elements, {hidden, buttons, lockOpacity}: Visibility) {
-    const {preview, area, hue, alpha, input, formats, save, cancel, clear, controls} = els;
+export function renderVisibility(content: PanelContent, {hidden, buttons, lockOpacity}: Visibility) {
+    const {preview, area, hue, alpha, input, formats, save, cancel, clear, controls} = content;
 
     preview.hidden = hidden.includes('preview');
     area.hidden = hidden.includes('area');
@@ -113,12 +116,16 @@ export function renderVisibility(els: Elements, {hidden, buttons, lockOpacity}: 
     controls.hidden = [input, formats, save, cancel, clear].every(el => el.hidden);
 }
 
-/** Sets texts and accessible names. Uses textContent and attributes only, never HTML. */
-export function renderLabels(els: Elements, labels: Labels) {
-    const {trigger, panel, area, hue, alpha, input, formats, swatches, saved, save, cancel, clear} = els;
-
+/** Sets the accessible names of the trigger and the popup. */
+export function renderShellLabels({trigger, panel}: Shell, labels: Labels) {
     trigger.setAttribute('aria-label', labels.toggle);
     panel.setAttribute('aria-label', labels.dialog);
+}
+
+/** Sets texts and accessible names of the panel's controls. Uses textContent and attributes only, never HTML. */
+export function renderPanelLabels(content: PanelContent, labels: Labels) {
+    const {area, hue, alpha, input, formats, swatches, saved, save, cancel, clear, sheetClose} = content;
+
     area.setAttribute('aria-label', labels.area);
     area.setAttribute('aria-roledescription', labels.areaRole);
     hue.setAttribute('aria-label', labels.hue);
@@ -130,4 +137,5 @@ export function renderLabels(els: Elements, labels: Labels) {
     save.textContent = labels.save;
     cancel.textContent = labels.cancel;
     clear.textContent = labels.clear;
+    sheetClose.textContent = labels.close;
 }

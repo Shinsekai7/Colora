@@ -42,7 +42,8 @@
     anchor-name: --cp-anchor;
 }
 
-:host(:not([popup])) .anchor {
+:host(:not([popup])) .anchor,
+.root.linked .anchor {
     display: none;
 }
 
@@ -458,6 +459,135 @@ input:focus-visible,
 :host([theme='compact']) .swatches,
 :host([theme='compact']) .controls {
     padding: 0 0.6em;
+}
+
+/* Bottom sheet on small touch screens, see the presentation attribute. Comes last to override the themes. */
+
+.sheet-header {
+    display: none;
+}
+
+:host .panel.sheet {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: 100%;
+    max-width: none;
+    max-height: 85vh;
+    margin: 0;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    font-size: 1.125rem;
+    padding-bottom: max(0.8em, env(safe-area-inset-bottom));
+    box-shadow: 0 -0.25em 2em rgb(0 0 0 / 0.2);
+    transition: translate 0.25s ease-out, overlay 0.25s allow-discrete, display 0.25s allow-discrete;
+}
+
+/* Slides in from the bottom instead of fading */
+:host .panel.sheet:not(:popover-open) {
+    translate: 0 100%;
+    opacity: 1;
+}
+
+@starting-style {
+    :host .panel.sheet:popover-open {
+        translate: 0 100%;
+        opacity: 1;
+    }
+}
+
+.panel.sheet::backdrop {
+    background: rgb(0 0 0 / 0.35);
+}
+
+:host .panel.sheet .sheet-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 2.25em;
+}
+
+/* Grab handle */
+:host .panel.sheet .sheet-header::before {
+    content: '';
+    position: absolute;
+    top: 0.4em;
+    left: 50%;
+    width: 2.5em;
+    height: 0.25em;
+    border-radius: 1em;
+    background: rgb(0 0 0 / 0.2);
+    translate: -50% 0;
+}
+
+:host([theme='compact']) .panel.sheet .sheet-header {
+    padding: 0 0.6em;
+}
+
+.sheet-close {
+    padding: 0.4em 0.8em;
+    border: none;
+    background: transparent;
+    color: var(--cp-accent);
+    font: inherit;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Touch-sized controls */
+
+:host .panel.sheet .thumb {
+    width: 28px;
+    height: 28px;
+}
+
+/* The bigger thumbs would touch the edges of the screen at both ends */
+:host .panel.sheet .slider[aria-orientation='horizontal'] {
+    height: 0.9em;
+    margin-inline: 4px;
+}
+
+:host([theme='compact']) .panel.sheet .slider {
+    margin-inline: 0 calc(0.6em + 4px);
+}
+
+:host .panel.sheet .slider[aria-orientation='vertical'] {
+    width: 14px;
+}
+
+:host .panel.sheet .swatches {
+    grid-template-columns: repeat(auto-fill, 2.5em);
+}
+
+:host .panel.sheet .swatch {
+    width: calc(2.5em - 6px);
+    height: calc(2.5em - 6px);
+    margin: 3px;
+}
+
+:host .panel.sheet .format,
+:host .panel.sheet .button {
+    padding: 0.6em 0.8em;
+    font-size: 0.85em;
+}
+
+/* iOS zooms in when focusing text fields with a smaller font */
+:host .panel.sheet .input {
+    padding: 0.5em 0.6em;
+    font-size: 16px;
+}
+
+:host(:not([theme='vertical']):not([theme='compact'])) .panel.sheet .selection {
+    height: min(40vh, 12em);
+}
+
+:host([theme='vertical']) .panel.sheet .area {
+    height: min(35vh, 12em);
+}
+
+:host([theme='compact']) .panel.sheet .selection {
+    height: min(50vh, 15em);
 }
 
 @media (prefers-reduced-motion: reduce) {

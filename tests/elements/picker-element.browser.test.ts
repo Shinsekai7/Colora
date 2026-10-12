@@ -321,38 +321,86 @@ describe('popup', () => {
         expect(log).toEqual(['open', 'close']);
     });
 
-    it('closes on Escape and returns the focus', async () => {
+    it('closes on Escape and returns the focus to the trigger', async () => {
         const el = mount('popup');
+        const log = record(el);
+
+        await click(part(el, '.trigger'));
+        await userEvent.keyboard('{Escape}');
+
+        expect(isOpen(el)).toBe(false);
+        expect(el.picker.getState().open).toBe(false);
+        expect(el.shadowRoot?.activeElement).toBe(part(el, '.trigger'));
+        expect(log).toEqual(['open', 'close']);
+    });
+
+    it('returns the focus to where it was when opened with showPicker()', async () => {
+        const el = mount('popup');
+        const button = document.createElement('button');
+        document.body.append(button);
+        button.focus();
+
         el.showPicker();
+        expect(el.shadowRoot?.activeElement).toBe(part(el, '.area'));
 
         await userEvent.keyboard('{Escape}');
-        expect(isOpen(el)).toBe(false);
-        await expect.poll(() => el.shadowRoot?.activeElement).toBe(part(el, '.trigger'));
+        expect(document.activeElement).toBe(button);
     });
 
     // Regression: the Enter key press that closed the popup also activated the trigger, reopening it
     it('stays closed when closed from a keydown handler', async () => {
         const el = mount('popup');
-        el.showPicker();
+        await click(part(el, '.trigger'));
 
         const input = part<HTMLInputElement>(el, '.input');
         input.addEventListener('keydown', e => e.key === 'Enter' && el.hidePicker());
         input.focus();
 
         await userEvent.keyboard('{Enter}');
-        await expect.poll(() => el.shadowRoot?.activeElement).toBe(part(el, '.trigger'));
+        expect(el.shadowRoot?.activeElement).toBe(part(el, '.trigger'));
         expect(isOpen(el)).toBe(false);
     });
 
     it('closes on clicks outside only', async () => {
         const el = mount('popup');
-        el.showPicker();
+        await click(part(el, '.trigger'));
 
         await click(part(el, '.hue'));
         expect(isOpen(el)).toBe(true);
 
         await commands.mouse('down', 5, 600);
+        await commands.mouse('up', 5, 600);
         expect(isOpen(el)).toBe(false);
+        expect(el.picker.getState().open).toBe(false);
+    });
+
+    it('closes other popups when opened', async () => {
+        const first = mount('popup');
+        const second = mount('popup');
+
+        await click(part(first, '.trigger'));
+        await click(part(second, '.trigger'));
+
+        expect(isOpen(first)).toBe(false);
+        expect(first.picker.getState().open).toBe(false);
+        expect(isOpen(second)).toBe(true);
+    });
+
+    it('stays inside a popover of the page', async () => {
+        const menu = document.createElement('div');
+        menu.popover = 'auto';
+        document.body.append(menu);
+        menu.showPopover();
+
+        const el = mount('popup', menu);
+        await click(part(el, '.trigger'));
+        expect(isOpen(el)).toBe(true);
+        expect(menu.matches(':popover-open')).toBe(true);
+
+        // Escape closes the innermost popover first
+        await userEvent.keyboard('{Escape}');
+        expect(isOpen(el)).toBe(false);
+        expect(menu.matches(':popover-open')).toBe(true);
     });
 
     it('closes after saving', async () => {
@@ -372,6 +420,37 @@ describe('popup', () => {
 
         await userEvent.keyboard('{Escape}');
         await expect.poll(() => document.activeElement).toBe(el.querySelector('button'));
+    });
+
+    it('closes with a custom trigger in browsers without showPopover({source})', async () => {
+        // Without a source, the browser doesn't know the trigger and closes the popup as soon as it's pressed
+        const showPopover = HTMLElement.prototype.showPopover;
+        HTMLElement.prototype.showPopover = function () {
+            showPopover.call(this);
+        };
+
+        try {
+            const el = mount('popup');
+            el.innerHTML = '<button slot="trigger">Pick a color</button>';
+            const button = el.querySelector('button') as HTMLElement;
+
+            await click(button);
+            expect(isOpen(el)).toBe(true);
+
+            await click(button);
+            expect(isOpen(el)).toBe(false);
+            expect(el.picker.getState().open).toBe(false);
+        } finally {
+            HTMLElement.prototype.showPopover = showPopover;
+        }
+    });
+
+    it('cannot be opened with a custom trigger while disabled', async () => {
+        const el = mount('popup disabled');
+        el.innerHTML = '<button slot="trigger">Pick a color</button>';
+
+        await click(el.querySelector('button') as HTMLElement);
+        expect(isOpen(el)).toBe(false);
     });
 
     it('cannot be opened while disabled', async () => {
@@ -410,6 +489,7 @@ describe('popup', () => {
         expect(close).toHaveBeenCalledOnce();
 
         await commands.mouse('down', 5, 600);
+        await commands.mouse('up', 5, 600);
         await userEvent.keyboard('{Escape}');
         expect(close).toHaveBeenCalledOnce();
     });
@@ -442,6 +522,91 @@ describe('popup', () => {
     });
 });
 
+describe('building the panel', () => {
+    const controls = (el: ColorPickerElement) => part(el, '.panel').childElementCount;
+
+    it('happens right away for inline pickers', () => {
+        expect(controls(mount())).toBeGreaterThan(0);
+    });
+
+    it('waits for the first opening for popups', async () => {
+        const el = mount('popup value="#f00"');
+        expect(controls(el)).toBe(0);
+
+        // The trigger works without the panel
+        expect(part(el, '.trigger').getAttribute('aria-label')).toBe('Choose color');
+        expect(getComputedStyle(part(el, '.root')).getPropertyValue('--cp-color')).toBe('rgb(255 0 0 / 1)');
+
+        await click(part(el, '.trigger'));
+        expect(controls(el)).toBeGreaterThan(0);
+        expect(el.shadowRoot?.activeElement).toBe(part(el, '.area'));
+    });
+
+    it('applies everything set before', () => {
+        const el = mount('popup theme="compact" hide="input" buttons="save" formats="hex oklch"');
+        el.value = '#00f';
+        el.swatches = ['#f00', '#0f0'];
+        el.i18n = {hue: 'Tono'};
+        el.showPicker();
+
+        expect(part(el, '.hue').getAttribute('aria-label')).toBe('Tono');
+        expect(part(el, '.hue').getAttribute('aria-orientation')).toBe('horizontal');
+        expect(part(el, '.hue').getAttribute('aria-valuenow')).toBe('240');
+        expect(part(el, '.input').hidden).toBe(true);
+        expect(part(el, '.save').hidden).toBe(false);
+        expect(parts(el, '.format').map(button => button.textContent)).toEqual(['HEX', 'OKLCH']);
+        expect(parts(el, '.swatch')).toHaveLength(2);
+    });
+
+    it('keeps the panel after closing', () => {
+        const el = mount('popup');
+        el.showPicker();
+        const area = part(el, '.area');
+
+        el.hidePicker();
+        el.showPicker();
+        expect(part(el, '.area')).toBe(area);
+    });
+
+    // Frameworks create the element first and set the attributes afterwards
+    it('waits for the attributes of created elements', () => {
+        const popup = document.createElement('colora-picker') as ColorPickerElement;
+        popup.setAttribute('popup', '');
+        document.body.append(popup);
+        expect(controls(popup)).toBe(0);
+
+        const inline = document.createElement('colora-picker') as ColorPickerElement;
+        inline.setAttribute('swatches', '#f00');
+        expect(controls(inline)).toBe(0);
+
+        document.body.append(inline);
+        expect(controls(inline)).toBeGreaterThan(0);
+        expect(parts(inline, '.swatch')).toHaveLength(1);
+    });
+
+    it('happens when switching to inline', () => {
+        const el = mount('popup');
+        el.removeAttribute('popup');
+        expect(controls(el)).toBeGreaterThan(0);
+    });
+
+    it('happens when opened through a linked input', async () => {
+        document.body.insertAdjacentHTML('beforeend', '<input id="color">');
+        const el = mount('popup for="color"');
+        expect(controls(el)).toBe(0);
+
+        await click(document.getElementById('color') as HTMLElement);
+        expect(isOpen(el)).toBe(true);
+        expect(controls(el)).toBeGreaterThan(0);
+    });
+
+    it('does not happen when opening is prevented', () => {
+        const el = mount('popup disabled');
+        el.showPicker();
+        expect(controls(el)).toBe(0);
+    });
+});
+
 describe('forms', () => {
     const form = (attributes: string) => {
         const formElement = document.createElement('form');
@@ -467,6 +632,15 @@ describe('forms', () => {
 
         el.removeAttribute('required');
         expect(el.checkValidity()).toBe(true);
+    });
+
+    // The input is hidden in the closed popup
+    it('reports missing popup values at the trigger', () => {
+        const {el} = form('popup required value=""');
+        el.value = '';
+
+        expect(el.reportValidity()).toBe(false);
+        expect(el.shadowRoot?.activeElement).toBe(part(el, '.trigger'));
     });
 
     it('resets to the value attribute', () => {

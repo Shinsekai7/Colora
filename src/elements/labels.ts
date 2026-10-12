@@ -16,6 +16,9 @@ export interface Labels {
     save: string;
     cancel: string;
     clear: string;
+
+    /** Close button of the bottom sheet, see the `presentation` attribute. */
+    close: string;
 }
 
 export const DEFAULT_LABELS: Readonly<Labels> = {
@@ -31,7 +34,8 @@ export const DEFAULT_LABELS: Readonly<Labels> = {
     saved: 'Revert to saved color',
     save: 'Save',
     cancel: 'Cancel',
-    clear: 'Clear'
+    clear: 'Clear',
+    close: 'Close'
 };
 
 /** Formats that can be referenced by id in the `formats` attribute. */

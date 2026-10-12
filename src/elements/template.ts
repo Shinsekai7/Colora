@@ -1,46 +1,55 @@
 import css from './picker.css?inline';
 
-const TEMPLATE = `
+const SHELL = `
 <div class="root" part="root">
   <span class="anchor" part="anchor">
     <slot name="trigger">
       <button class="trigger" part="trigger" type="button" aria-haspopup="dialog" aria-controls="panel"></button>
     </slot>
   </span>
-  <div class="panel" part="panel" id="panel">
-    <div class="selection" part="selection">
-      <div class="preview" part="preview">
-        <button class="saved" part="saved" type="button"></button>
-        <div class="current" part="current"></div>
-      </div>
-      <div class="area" part="area" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100">
-        <div class="thumb" part="thumb area-thumb"></div>
-      </div>
-      <div class="slider hue" part="slider hue" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="360">
-        <div class="thumb" part="thumb hue-thumb"></div>
-      </div>
-      <div class="slider alpha" part="slider alpha" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100">
-        <div class="thumb" part="thumb alpha-thumb"></div>
-      </div>
-    </div>
-    <div class="swatches" part="swatches" role="group"></div>
-    <div class="controls" part="controls">
-      <input class="input" part="input" type="text" spellcheck="false" autocomplete="off">
-      <div class="formats" part="formats" role="radiogroup"></div>
-      <button class="button save" part="button save" type="button"></button>
-      <button class="button cancel" part="button cancel" type="button"></button>
-      <button class="button clear" part="button clear" type="button"></button>
-    </div>
+  <div class="panel" part="panel" id="panel"></div>
+</div>`;
+
+const PANEL = `
+<div class="sheet-header" part="sheet-header">
+  <button class="sheet-close" part="sheet-close" type="button"></button>
+</div>
+<div class="selection" part="selection">
+  <div class="preview" part="preview">
+    <button class="saved" part="saved" type="button"></button>
+    <div class="current" part="current"></div>
   </div>
+  <div class="area" part="area" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="thumb" part="thumb area-thumb"></div>
+  </div>
+  <div class="slider hue" part="slider hue" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="360">
+    <div class="thumb" part="thumb hue-thumb"></div>
+  </div>
+  <div class="slider alpha" part="slider alpha" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="thumb" part="thumb alpha-thumb"></div>
+  </div>
+</div>
+<div class="swatches" part="swatches" role="group"></div>
+<div class="controls" part="controls">
+  <input class="input" part="input" type="text" spellcheck="false" autocomplete="off">
+  <div class="formats" part="formats" role="radiogroup"></div>
+  <button class="button save" part="button save" type="button"></button>
+  <button class="button cancel" part="button cancel" type="button"></button>
+  <button class="button clear" part="button clear" type="button"></button>
 </div>`;
 
 // Shared by all instances, created on first use
-let template: HTMLTemplateElement | undefined;
+let shellTemplate: HTMLTemplateElement | undefined;
+let panelTemplate: HTMLTemplateElement | undefined;
 let sheet: CSSStyleSheet | undefined;
 
-/** Fills the shadow root with the picker's markup and styles, returns its elements. */
+const createTemplate = (html: string) => Object.assign(document.createElement('template'), {innerHTML: html});
+
+const query = (root: ParentNode) => <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector(selector) as T;
+
+/** Fills the shadow root with the styles, the trigger and the still empty panel, see `createPanelContent`. */
 export function createShadowContent(shadow: ShadowRoot) {
-    template ??= Object.assign(document.createElement('template'), {innerHTML: TEMPLATE});
+    shellTemplate ??= createTemplate(SHELL);
 
     if (!sheet) {
         sheet = new CSSStyleSheet();
@@ -48,16 +57,28 @@ export function createShadowContent(shadow: ShadowRoot) {
     }
 
     shadow.adoptedStyleSheets = [sheet];
-    shadow.append(template.content.cloneNode(true));
+    shadow.append(shellTemplate.content.cloneNode(true));
 
-    const $ = <T extends HTMLElement = HTMLElement>(selector: string) => shadow.querySelector(selector) as T;
+    const $ = query(shadow);
 
     return {
         root: $('.root'),
         anchor: $('.anchor'),
         trigger: $<HTMLButtonElement>('.trigger'),
         triggerSlot: $<HTMLSlotElement>('slot[name="trigger"]'),
-        panel: $('.panel'),
+        panel: $('.panel')
+    };
+}
+
+/** Fills the panel with the controls. Popups only do that once they're first opened. */
+export function createPanelContent(panel: HTMLElement) {
+    panelTemplate ??= createTemplate(PANEL);
+    panel.append(panelTemplate.content.cloneNode(true));
+
+    const $ = query(panel);
+
+    return {
+        sheetClose: $<HTMLButtonElement>('.sheet-close'),
         preview: $('.preview'),
         saved: $<HTMLButtonElement>('.saved'),
         area: $('.area'),
@@ -73,4 +94,8 @@ export function createShadowContent(shadow: ShadowRoot) {
     };
 }
 
-export type Elements = ReturnType<typeof createShadowContent>;
+/** Always present: the trigger and the panel's container. */
+export type Shell = ReturnType<typeof createShadowContent>;
+
+/** The controls inside the panel. */
+export type PanelContent = ReturnType<typeof createPanelContent>;

@@ -1,4 +1,4 @@
-import {sameColor} from '../color/index.js';
+import {defaultFormats, sameColor} from '../color/index.js';
 import type {HSVA, OutputFormat} from '../color/index.js';
 import type {Disposable} from '../interactions/index.js';
 import {DEFAULT_COLOR} from '../state/index.js';
@@ -8,10 +8,11 @@ import {bindEvents, bindSliders} from './bindings.js';
 import {createController, resolveFormats} from './controller.js';
 import {DEFAULT_FORMATS, DEFAULT_LABELS} from './labels.js';
 import type {Labels} from './labels.js';
+import {LinkedInput} from './linked-input.js';
 import {Popup} from './popup.js';
-import {renderFormats, renderLabels, renderState, renderVisibility} from './render.js';
-import {createShadowContent} from './template.js';
-import type {Elements} from './template.js';
+import {renderFormats, renderPanel, renderPanelLabels, renderShell, renderShellLabels, renderVisibility} from './render.js';
+import {createPanelContent, createShadowContent} from './template.js';
+import type {PanelContent, Shell} from './template.js';
 
 export type Theme = 'horizontal' | 'vertical' | 'compact';
 
@@ -27,13 +28,14 @@ const BaseElement = (typeof HTMLElement === 'undefined' ? class {} : HTMLElement
  *
  * The element connects its parts: the controller holds the state (state/), which is rendered
  * by render.ts, changed through bindings.ts and shown as popup by popup.ts.
+ * Popups only build their panel when first opened, so pages with many pickers stay light.
  */
 export class ColorPickerElement extends BaseElement {
     static formAssociated = true;
 
     static observedAttributes = [
         'value', 'disabled', 'required', 'format', 'formats', 'swatches', 'buttons',
-        'hide', 'lock-opacity', 'popup', 'placement', 'theme'
+        'hide', 'lock-opacity', 'popup', 'placement', 'theme', 'for', 'presentation'
     ];
 
     static #anchorPositioning: boolean | undefined;
@@ -50,31 +52,57 @@ export class ColorPickerElement extends BaseElement {
 
     readonly #internals = this.attachInternals();
     readonly #shadow = this.attachShadow({mode: 'open'});
-    readonly #els: Elements;
+    readonly #shell: Shell;
     readonly #popup: Popup;
+    readonly #linked: LinkedInput;
 
     #picker!: Picker;
+
+    /** The panel's controls, null until built, see #render. */
+    #content: PanelContent | null = null;
     #sliders: Disposable | null = null;
     #formats: readonly (string | OutputFormat)[] | null = null;
     #swatches: readonly ColorInput[] | null = null;
     #i18n: Partial<Labels> = {};
     #formDisabled = false;
 
+    /** Set through the `input` property, overrides the `for` attribute. */
+    #input: HTMLInputElement | null | undefined;
+
     constructor() {
         super();
 
-        this.#els = createShadowContent(this.#shadow);
-        this.#popup = new Popup({
+        this.#shell = createShadowContent(this.#shadow);
+        this.#linked = new LinkedInput({
             host: this,
-            shadow: this.#shadow,
-            els: this.#els,
-            placement: () => this.getAttribute('placement'),
-            anchorPositioning: () => ColorPickerElement.anchorPositioning,
-            onDismiss: () => this.#picker.close()
+            picker: () => this.#picker,
+            parsers: () => [...defaultFormats, ...this.#formatList()],
+            value: () => this.value,
+            dispatch: type => this.#dispatch(type, type === 'input'),
+            popup: () => this.#isPopup
         });
 
-        bindEvents(this.#els, () => this.#picker);
-        renderLabels(this.#els, this.i18n);
+        this.#popup = new Popup({
+            host: this,
+            els: this.#shell,
+            area: () => this.#content?.area ?? null,
+            placement: () => this.getAttribute('placement'),
+            anchorPositioning: () => ColorPickerElement.anchorPositioning,
+            linked: () => this.#linked.element,
+            presentation: () => this.getAttribute('presentation'),
+            onToggle: open => {
+                if (open) {
+                    this.#picker.open();
+                } else {
+                    this.#picker.close();
+                }
+
+                // False if it can't be opened, e.g. while disabled
+                return this.#picker.getState().open === open;
+            }
+        });
+
+        renderShellLabels(this.#shell, this.i18n);
         this.#setup();
     }
 
@@ -133,7 +161,21 @@ export class ColorPickerElement extends BaseElement {
 
     set i18n(labels: Partial<Labels>) {
         this.#i18n = {...labels};
-        renderLabels(this.#els, this.i18n);
+        renderShellLabels(this.#shell, this.i18n);
+
+        if (this.#content) {
+            renderPanelLabels(this.#content, this.i18n);
+        }
+    }
+
+    /** The linked input, see the `for` attribute. Setting it overrides the attribute, `null` unlinks it. */
+    get input(): HTMLInputElement | null {
+        return this.#linked.element;
+    }
+
+    set input(input: HTMLInputElement | null) {
+        this.#input = input;
+        this.#link();
     }
 
     get name(): string | null {
@@ -207,18 +249,33 @@ export class ColorPickerElement extends BaseElement {
                 this.#updateForm();
                 break;
             case 'placement':
-                if (this.#picker.getState().open) {
-                    this.#popup.position();
-                }
+                this.#popup.updatePlacement();
+                break;
+            case 'presentation':
+                this.#popup.updatePresentation();
+                break;
+            case 'for':
+                this.#link();
                 break;
             default: // buttons, hide
                 this.#render(this.#picker.getState());
         }
     }
 
+    connectedCallback() {
+        this.#link();
+
+        // Inline pickers are only built once connected: `createElement`, used by frameworks, has no attributes yet
+        if (!this.#content && !this.#isPopup) {
+            this.#render(this.#picker.getState());
+        }
+    }
+
     disconnectedCallback() {
         this.#picker.close();
         this.#popup.destroy();
+        this.#linked.link(null);
+        this.#popup.updateLink();
     }
 
     formResetCallback() {
@@ -237,6 +294,31 @@ export class ColorPickerElement extends BaseElement {
     }
 
     /* Configuration */
+
+    /** Links the input from the `input` property or the `for` attribute. */
+    #link() {
+        if (!this.isConnected) {
+            return;
+        }
+
+        const id = this.getAttribute('for');
+        let input = this.#input;
+
+        if (input === undefined && id) {
+            const root = this.getRootNode() as Document | ShadowRoot;
+            const found = root.getElementById(id);
+            input = found instanceof HTMLInputElement ? found : null;
+
+            // While the page is loading, the input may come after the picker
+            if (!input && document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.#link(), {once: true});
+            }
+        }
+
+        this.#linked.link(input ?? null);
+        this.#popup.updateLink();
+        this.#linked.update();
+    }
 
     get #isPopup() {
         return this.hasAttribute('popup');
@@ -287,8 +369,11 @@ export class ColorPickerElement extends BaseElement {
         this.#picker = picker;
         this.#connect(picker);
 
-        renderFormats(this.#els, this.#formatList());
-        this.#createSliders();
+        if (this.#content) {
+            renderFormats(this.#content, this.#formatList());
+            this.#createSliders();
+        }
+
         this.#updateMode();
     }
 
@@ -326,10 +411,29 @@ export class ColorPickerElement extends BaseElement {
         });
     }
 
+    /** Fills the panel with its controls. */
+    #build(): PanelContent {
+        const content = createPanelContent(this.#shell.panel);
+        this.#content = content;
+
+        bindEvents(content, () => this.#picker);
+        renderPanelLabels(content, this.i18n);
+        renderFormats(content, this.#formatList());
+        this.#createSliders();
+
+        // Lets the color area get the focus when opening
+        this.#popup.updateLink();
+        return content;
+    }
+
     #createSliders() {
+        if (!this.#content) {
+            return;
+        }
+
         this.#sliders?.destroy();
         // The horizontal layout places the sliders next to the color area, so they run vertically
-        this.#sliders = bindSliders(this.#els, () => this.#picker, this.#theme === 'horizontal' ? 'vertical' : 'horizontal');
+        this.#sliders = bindSliders(this.#content, () => this.#picker, this.#theme === 'horizontal' ? 'vertical' : 'horizontal');
     }
 
     #updateMode() {
@@ -342,8 +446,23 @@ export class ColorPickerElement extends BaseElement {
     }
 
     #render(state: PickerState, previous?: PickerState) {
-        renderState(this.#els, state, previous);
-        renderVisibility(this.#els, {hidden: this.#tokens('hide'), buttons: this.#tokens('buttons'), lockOpacity: this.#lockOpacity});
+        renderShell(this.#shell, state);
+
+        // Inline pickers need their controls once shown, popups once they open
+        let content = this.#content;
+        let previousContent = previous;
+
+        if (!content && (state.open || (!this.#isPopup && this.isConnected))) {
+            content = this.#build();
+            previousContent = undefined;
+        }
+
+        if (content) {
+            renderPanel(content, state, previousContent);
+            renderVisibility(content, {hidden: this.#tokens('hide'), buttons: this.#tokens('buttons'), lockOpacity: this.#lockOpacity});
+        }
+
+        this.#linked?.update();
         this.#popup.sync(state.open);
 
         if (!previous || previous.saved !== state.saved || previous.format !== state.format) {
@@ -356,7 +475,9 @@ export class ColorPickerElement extends BaseElement {
         this.#internals.setFormValue(saved ? this.value : null);
 
         if (this.hasAttribute('required') && !saved) {
-            this.#internals.setValidity({valueMissing: true}, 'Please select a color.', this.#els.input);
+            // The trigger, as the input is hidden in the closed popup
+            const anchor = this.#isPopup ? this.#shell.trigger : this.#content?.input;
+            this.#internals.setValidity({valueMissing: true}, 'Please select a color.', anchor);
         } else {
             this.#internals.setValidity({});
         }

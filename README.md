@@ -19,7 +19,8 @@
 * 🎨 Three themes, restyled with CSS custom properties and `::part()`
 * 🌈 HEX, RGB, HSL, HSV, OKLCH and CMYK, including CSS named colors
 * 🔍 Color comparison, opacity and swatches
-* 📱 Mouse, touch and pen through pointer events, popup always on top through the Popover API
+* 📱 Mouse, touch and pen through pointer events, popup always on top through the Popover API, a bottom sheet on phones
+* ⚡ Lightweight on the page: popups only build their controls when first opened
 * ♿ Accessible: labelled sliders, keyboard support, translatable
 * 🧪 TypeScript, fully tested in a real browser, no dependencies
 
@@ -55,6 +56,10 @@ All styles are part of the JavaScript, there's no stylesheet to include.
     <button slot="trigger">Pick a color</button>
 </colora-picker>
 
+<!-- For an existing input, see "Using an existing input" -->
+<input id="brand" name="brand" value="#5856d6">
+<colora-picker for="brand" popup></colora-picker>
+
 <!-- In a form, submitted as color=#42445A -->
 <form>
     <colora-picker name="color" value="#42445a" required popup></colora-picker>
@@ -86,7 +91,9 @@ picker.addEventListener('change', () => console.log('committed', picker.value));
 | `value` | Initial color, any supported format or CSS color name. |
 | `name` | Name for form submission. |
 | `popup` | Shows a button that opens the picker in a popover, instead of showing it inline. |
+| `for` | Id of an `<input>` the picker is linked to, see [Using an existing input](#using-an-existing-input). |
 | `placement` | Where the popup opens: `top`, `bottom` (default), `left` or `right`, optionally with `-start` or `-end`. Flips if there's no space. |
+| `presentation` | How the popup is shown: `auto` (default), `popover` or `sheet`, see [On phones](#on-phones). |
 | `theme` | The layout: `horizontal` (default, wide, sliders next to the color area), `vertical` (narrow, everything stacked) or `compact` (narrow, color area on top with a round preview). |
 | `formats` | Formats the user can switch between, default `hex rgb hsl`. Available: `hex`, `rgb`, `hsl`, `hsv`, `oklch`, `cmyk`. |
 | `format` | Initially selected format. |
@@ -106,6 +113,7 @@ picker.addEventListener('change', () => console.log('committed', picker.value));
 | `color` | The committed color as `{h, s, v, a}`, `null` if cleared. |
 | `formats` | Like the attribute, also accepts custom formats. |
 | `swatches` | Like the attribute, as array. |
+| `input` | The linked input. Setting an element overrides the `for` attribute, e.g. for inputs inside another shadow root; `null` unlinks it. |
 | `i18n` | Texts and accessible names, see [Translations](#translations). |
 | `picker` | The underlying state controller, see [Building your own UI](#building-your-own-ui). |
 | `showPicker()`, `hidePicker()` | Opens or closes the popup. |
@@ -125,7 +133,35 @@ Like native inputs, setting `value` or attributes doesn't emit events.
 ### Keyboard
 
 The color area and sliders are focusable: arrow keys move by 1%, with <kbd>Shift</kbd> or <kbd>Page Up</kbd> / <kbd>Page Down</kbd> by 10%, <kbd>Home</kbd> and <kbd>End</kbd> jump to the ends.
-The format buttons are a radio group switched with arrow keys. <kbd>Escape</kbd> closes the popup.
+The format buttons are a radio group switched with arrow keys.
+
+The popup is a native popover: <kbd>Escape</kbd> or a click outside closes it, and the focus goes back to where it was.
+Opening a picker closes other open popups on the page, except ones it's inside of, e.g. a menu containing the picker.
+
+### On phones
+
+On small touch screens the popup slides up from the bottom of the screen as a sheet, with bigger controls and a close button.
+That's `presentation="auto"`: it applies when `(pointer: coarse) and (max-width: 640px)` matches, and switches when that changes, e.g. when rotating a tablet.
+Pickers linked to an input stay a popover, since the keyboard would compete with the sheet for the space.
+Set `presentation="popover"` or `presentation="sheet"` to always use one.
+
+## Using an existing input
+
+Forms often already have a text field for a color. Link the picker to it with `for`, like a `<label>`:
+
+```html
+<input id="brand" name="brand" value="#5856d6">
+<colora-picker for="brand" popup></colora-picker>
+```
+
+- The input opens the popup: click it or press <kbd>↓</kbd>. The popup is placed next to the input, and the picker doesn't show its own button.
+- The focus stays in the input, so it can still be typed in. Valid colors apply right away; when leaving the input, the text is formatted, or restored if it's not a color. An empty input clears the color.
+- Colors picked in the popup are written into the input, which emits its own `input` and `change` events. Frameworks like React or Vue binding the input notice them.
+- The popup closes when the focus moves on, unless it moves into the popup. <kbd>Tab</kbd> from the input moves into the popup; in browsers without `showPopover({source})`, only if the picker comes right after the input in the page.
+- The input is the source of truth: when linking, its color is used. If it's empty, it gets the picker's `value`.
+- The input keeps working without JavaScript, it's a plain text field then.
+
+Without `popup`, the inline picker and the input are just kept in sync.
 
 ## Styling
 
@@ -154,7 +190,7 @@ colora-picker::part(panel) { width: 20em; }
 colora-picker::part(swatch) { border-radius: 50%; }
 ```
 
-Parts: `trigger`, `panel`, `selection`, `preview`, `saved`, `current`, `area`, `slider`, `hue`, `alpha`, `thumb`, `swatches`, `swatch`, `swatch-active`, `controls`, `input`, `formats`, `format`, `button`, `save`, `cancel`, `clear`.
+Parts: `trigger`, `panel`, `sheet-header`, `sheet-close`, `selection`, `preview`, `saved`, `current`, `area`, `slider`, `hue`, `alpha`, `thumb`, `swatches`, `swatch`, `swatch-active`, `controls`, `input`, `formats`, `format`, `button`, `save`, `cancel`, `clear`.
 
 ## Translations
 
@@ -174,7 +210,8 @@ picker.i18n = {
     saved: 'Revert to saved color',        // Accessible name of the saved color in the preview
     save: 'Save',                          // Text of the save button
     cancel: 'Cancel',                      // Text of the cancel button
-    clear: 'Clear'                         // Text of the clear button
+    clear: 'Clear',                        // Text of the clear button
+    close: 'Close'                         // Text of the close button of the sheet on phones
 };
 ```
 

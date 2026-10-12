@@ -31,6 +31,13 @@ const picker = document.createElement('colora-picker');
 picker.setAttribute('value', '#5856d6');
 stage.append(picker);
 
+// Shown with the "Linked input" trigger, the picker is linked to it
+const textInput = document.createElement('input');
+textInput.id = 'demo-color';
+textInput.className = 'demo-input';
+textInput.spellcheck = false;
+textInput.setAttribute('aria-label', 'Color');
+
 /** Reads the form into a configuration. */
 function readConfig() {
     const data = new FormData(form);
@@ -39,6 +46,7 @@ function readConfig() {
     return {
         theme: data.get('theme'),
         popup: data.get('display') === 'popup',
+        linked: data.get('trigger') === 'input',
         dark: data.get('appearance') === 'dark',
         formats: data.getAll('formats'),
         buttons: data.getAll('buttons'),
@@ -55,6 +63,7 @@ function attributesOf(config) {
     const formats = config.formats.join(' ');
 
     const attributes = [
+        ['for', config.linked ? 'color' : null],
         ['theme', config.theme !== 'horizontal' ? config.theme : null],
         ['popup', config.popup ? '' : null],
         ['placement', config.popup && config.placement !== 'bottom' ? config.placement : null],
@@ -79,6 +88,15 @@ function apply() {
         } else {
             picker.removeAttribute(name);
         }
+    }
+
+    // The live input has its own id, the code uses a plainer one
+    if (config.linked) {
+        stage.prepend(textInput);
+        picker.setAttribute('for', textInput.id);
+    } else {
+        picker.removeAttribute('for');
+        textInput.remove();
     }
 
     // The picker's popup is in the top layer, the stage only gets darker for the inline one
@@ -108,7 +126,8 @@ const token = (text, type) => ({text, type});
 function codeLines(config) {
     const attributes = attributesOf(config);
 
-    if (picker.value) {
+    // A linked input holds the color itself
+    if (picker.value && !config.linked) {
         attributes.unshift(['value', picker.value]);
     }
 
@@ -122,6 +141,15 @@ function codeLines(config) {
         [token('</script>', 'tag')],
         []
     ];
+
+    if (config.linked) {
+        const inputAttributes = [['id', 'color'], ['name', 'color'], ['value', picker.value]];
+        lines.push([
+            token('<input', 'tag'),
+            ...inputAttributes.flatMap(attribute => [token(' '), ...attributeTokens(attribute)]),
+            token('>', 'tag')
+        ]);
+    }
 
     if (attributes.length <= 1) {
         lines.push([
