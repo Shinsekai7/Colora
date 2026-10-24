@@ -3,16 +3,37 @@ import type {Disposable} from '../interactions/index.js';
 import type {Picker} from '../state/index.js';
 import type {PanelContent} from './template.js';
 
+/** Actions handled by the element. */
+export interface PanelActions {
+    /** Called by the saved color in the preview. */
+    revert(): void;
+
+    /** Copy button, and Ctrl/Cmd+C outside of the text field. */
+    copy(): void;
+
+    /** Eyedropper button. */
+    pickFromScreen(): void;
+}
+
 /**
  * Forwards clicks and keys on buttons, input, formats and swatches to the controller.
  * The controller is passed as getter as it's re-created when the configuration changes.
- * `revert` is called by the saved color in the preview.
  * Listeners live on the shadow content, so they don't need to be removed.
  */
-export function bindEvents(content: PanelContent, picker: () => Picker, revert: () => void) {
-    const {sheetClose, saved, input, formats, swatches, save, cancel, clear} = content;
+export function bindEvents(panel: HTMLElement, content: PanelContent, picker: () => Picker, actions: PanelActions) {
+    const {sheetClose, saved, input, formats, swatches, copy, eyeDropper, save, cancel, clear} = content;
 
-    saved.addEventListener('click', revert);
+    saved.addEventListener('click', () => actions.revert());
+    copy.addEventListener('click', () => actions.copy());
+    eyeDropper.addEventListener('click', () => actions.pickFromScreen());
+
+    // The text field copies its selection natively
+    panel.addEventListener('keydown', event => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c' && event.target !== input) {
+            event.preventDefault();
+            actions.copy();
+        }
+    });
 
     input.addEventListener('input', event => {
         // The native event would escape the shadow root, the element dispatches its own

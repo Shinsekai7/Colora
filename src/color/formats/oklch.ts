@@ -1,6 +1,6 @@
 import {hsvToRgb, oklchToRgb, rgbToOklch} from '../convert.js';
 import {fmt} from '../math.js';
-import {parseFunction, readAlpha, readFraction, readHue} from '../syntax.js';
+import {parseFunction, readAlpha, readFraction, readHue, readNumber} from '../syntax.js';
 import type {OutputFormat} from '../types.js';
 import {fmtAlpha, fromRgb} from './shared.js';
 
@@ -22,25 +22,24 @@ export const oklch: OutputFormat = {
 
         const [lArg, cArg, hArg, aArg] = fn.args;
         const l = lArg && readFraction(lArg);
+        const c = cArg && readNumber(cArg, CHROMA_PERCENT_REFERENCE);
         const h = hArg && readHue(hArg);
         const a = readAlpha(aArg);
 
-        let c: number | null = null;
-        if (cArg?.unit === '%' || (cArg?.unit === '' && cArg.value >= 0)) {
-            c = cArg.unit === '%' ? (cArg.value / 100) * CHROMA_PERCENT_REFERENCE : cArg.value;
-        }
-
-        if (l == null || c === null || !Number.isFinite(c) || c < 0 || h == null || a === null) {
+        if (l == null || c == null || c < 0 || h == null || a === null) {
             return null;
         }
 
         return fromRgb('oklch', oklchToRgb({l, c, h}), a);
     },
 
-    /** Chroma gets three more decimal places than lightness and hue as it's a lot smaller. */
+    /**
+     * Chroma gets three more decimal places than lightness and hue as it's a lot smaller.
+     * Defaults to a precision of 2, the lowest at which every 8-bit sRGB color survives a round-trip.
+     */
     stringify(color, options = {}) {
         const {l, c, h} = rgbToOklch(hsvToRgb(color));
-        const p = options.precision ?? 0;
+        const p = options.precision ?? 2;
         const alpha = color.a < 1 ? ` / ${fmtAlpha(color.a, options)}` : '';
         return `oklch(${fmt(l * 100, p)}% ${fmt(c, p + 3)} ${fmt(h, p)}${alpha})`;
     }

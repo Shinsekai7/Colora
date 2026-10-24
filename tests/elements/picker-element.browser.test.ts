@@ -78,7 +78,7 @@ describe('attributes', () => {
 
     it('renders swatches and skips invalid ones', () => {
         const el = mount('swatches="#f00 rgb(0, 255, 0) nope hsl(240 100% 50% / 0.5)"');
-        expect(parts(el, '.swatch').map(s => s.getAttribute('aria-label'))).toEqual(['#FF0000', '#00FF00', '#0000FF80']);
+        expect(parts(el, '.swatch').map(s => s.getAttribute('aria-label'))).toEqual(['red, #FF0000', 'green, #00FF00', 'blue, #0000FF80']);
     });
 
     it('shows buttons and hides parts', () => {
@@ -120,9 +120,18 @@ describe('attributes', () => {
     it('describes the sliders for assistive technology', () => {
         const el = mount('value="hsv(120 50% 25% / 0.5)"');
 
-        expect(part(el, '.area').getAttribute('aria-valuetext')).toBe('50%, 25%');
-        expect(part(el, '.hue').getAttribute('aria-valuetext')).toBe('120°');
+        expect(part(el, '.area').getAttribute('aria-valuetext')).toBe('Saturation 50%, Brightness 25%, dark grayish green');
+        expect(part(el, '.hue').getAttribute('aria-valuetext')).toBe('120°, dark grayish green');
         expect(part(el, '.alpha').getAttribute('aria-valuenow')).toBe('50');
+    });
+
+    it('translates the descriptions', () => {
+        const el = mount('value="hsv(120 50% 25%)" swatches="#f00"');
+        el.i18n = {saturation: 'Saturación', brightness: 'Brillo', colorName: ({h}) => (h < 60 ? 'rojo' : 'verde')};
+
+        expect(part(el, '.area').getAttribute('aria-valuetext')).toBe('Saturación 50%, Brillo 25%, verde');
+        expect(part(el, '.hue').getAttribute('aria-valuetext')).toBe('120°, verde');
+        expect(part(el, '.swatch').getAttribute('aria-label')).toBe('rojo, #FF0000');
     });
 });
 
@@ -261,6 +270,73 @@ describe('editing', () => {
         await click(part(el, '.clear'));
         expect(el.value).toBe('');
         expect(log).toEqual(['change']);
+    });
+});
+
+describe('copy and eyedropper', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    it('copies the color being edited and announces it', async () => {
+        const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+        const el = mount('buttons="copy save" value="#f00"');
+        el.picker.adjust({h: 120});
+
+        await click(part(el, '.copy'));
+        expect(writeText).toHaveBeenCalledWith('#00FF00');
+        await vi.waitFor(() => expect(part(el, '.status').textContent).toBe('Copied'));
+        expect(part(el, '.copy').classList.contains('copied')).toBe(true);
+        expect(part(el, '.copy').getAttribute('aria-label')).toBe('Copy color');
+    });
+
+    it('copies with Ctrl+C outside of the text field', async () => {
+        const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+        const el = mount('value="#f00"');
+
+        part(el, '.hue').focus();
+        await userEvent.keyboard('{Control>}c{/Control}');
+        expect(writeText).toHaveBeenCalledWith('#FF0000');
+
+        writeText.mockClear();
+        part(el, '.input').focus();
+        await userEvent.keyboard('{Control>}c{/Control}');
+        expect(writeText).not.toHaveBeenCalled();
+    });
+
+    it('picks a color from the screen, keeping the opacity', async () => {
+        vi.stubGlobal('EyeDropper', class {
+            open = () => Promise.resolve({sRGBHex: '#00ff00'});
+        });
+
+        const el = mount('buttons="eyedropper" value="rgb(255 0 0 / 0.5)"');
+        const log = record(el);
+
+        await click(part(el, '.eyedropper'));
+        await vi.waitFor(() => expect(el.value).toBe('rgb(0 255 0 / 0.5)'));
+        expect(log).toEqual(['input', 'change']);
+    });
+
+    it('ignores a cancelled eyedropper', async () => {
+        vi.stubGlobal('EyeDropper', class {
+            open = () => Promise.reject(new DOMException('Cancelled', 'AbortError'));
+        });
+
+        const el = mount('buttons="eyedropper"');
+        const log = record(el);
+
+        await click(part(el, '.eyedropper'));
+        expect(el.value).toBe('#42445A');
+        expect(log).toEqual([]);
+    });
+
+    it('hides the eyedropper where the browser has none', () => {
+        vi.stubGlobal('EyeDropper', undefined);
+        const el = mount('buttons="eyedropper"');
+
+        expect(part(el, '.eyedropper').hidden).toBe(true);
+        expect(part(el, '.controls').hidden).toBe(false);
     });
 });
 

@@ -215,9 +215,29 @@ describe('oklch', () => {
     });
 
     it('stringifies', () => {
-        expect(oklch.stringify(SLATE)).toBe('oklch(39% 0.037 280)');
-        expect(oklch.stringify({...SLATE, a: 0.5})).toBe('oklch(39% 0.037 280 / 0.5)');
+        expect(oklch.stringify(SLATE)).toBe('oklch(39.39% 0.03722 280.49)');
+        expect(oklch.stringify({...SLATE, a: 0.5})).toBe('oklch(39.39% 0.03722 280.49 / 0.5)');
         expect(oklch.stringify({h: 0, s: 0, v: 100, a: 1})).toBe('oklch(100% 0 0)');
+        expect(oklch.stringify(SLATE, {precision: 0})).toBe('oklch(39% 0.037 280)');
+    });
+
+    it('keeps 8-bit colors when parsing its own output', () => {
+        const drifted: string[] = [];
+
+        for (let r = 0; r < 256; r += 5) {
+            for (let g = 0; g < 256; g += 5) {
+                for (let b = 0; b < 256; b += 5) {
+                    const input = `rgb(${r} ${g} ${b})`;
+                    const output = oklch.stringify((rgb.parse(input) as ParsedColor).color);
+
+                    if (rgb.stringify((oklch.parse(output) as ParsedColor).color) !== input) {
+                        drifted.push(input);
+                    }
+                }
+            }
+        }
+
+        expect(drifted).toEqual([]);
     });
 });
 
