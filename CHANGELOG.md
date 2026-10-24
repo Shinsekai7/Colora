@@ -2,6 +2,12 @@
 
 All notable changes to Colora. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/). Before 1.0, minor versions may contain breaking changes.
 
+## [0.7.0] - 2026-10-24
+
+### Fixed
+
+- A popup that was linked to an input and then unlinked, e.g. by removing `for`, opened away from its own button: the input's position was still applied.
+
 ## [0.6.0] - 2026-10-24
 
 ### Added
@@ -52,6 +58,7 @@ No changes from 0.2.0.
 
 Initial release.
 
+[0.7.0]: https://github.com/Shinsekai7/colora/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Shinsekai7/colora/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Shinsekai7/colora/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Shinsekai7/colora/compare/v0.3.0...v0.4.0
