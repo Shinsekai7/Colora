@@ -174,12 +174,14 @@ export class Popup {
         panel.classList.toggle('sheet', sheet);
         panel.classList.toggle('fallback-position', fallback);
 
+        // Each mode only sets its own properties, the others' would shift the panel, e.g. after unlinking an input
+        panel.style.margin = '';
+        panel.style.removeProperty('position-area');
+        panel.style.left = '';
+        panel.style.top = '';
+
         // The sheet is placed by its styles, at the bottom of the screen
         if (sheet) {
-            panel.style.margin = '';
-            panel.style.removeProperty('position-area');
-            panel.style.left = '';
-            panel.style.top = '';
             return;
         }
 
@@ -190,8 +192,6 @@ export class Popup {
             panel.style.setProperty('position-area', toPositionArea(resolved));
             return;
         }
-
-        panel.style.margin = '';
 
         if (!this.#isOpen) {
             return;

@@ -179,6 +179,38 @@ describe('opening', () => {
             expect(panel.top).toBeCloseTo(box.bottom + 8, 0);
             expect(panel.left).toBeCloseTo(box.left, 0);
         });
+
+        it('places the popup below its own button after unlinking', async () => {
+            ColorPickerElement.anchorPositioning = anchorPositioning;
+            // Away from the edge of the screen, where the popup would keep a gap
+            const {el, input} = mount('#ff0000', 'popup placement="bottom-start" theme="compact" style="position: fixed; left: 100px; top: 100px"');
+            await click(input);
+            await userEvent.keyboard('{Escape}');
+
+            el.removeAttribute('for');
+            el.showPicker();
+
+            const box = part(el, '.trigger').getBoundingClientRect();
+            const panel = part(el, '.panel').getBoundingClientRect();
+            expect(panel.top).toBeCloseTo(box.bottom + 8, 0);
+            expect(panel.left).toBeCloseTo(box.left, 0);
+        });
+
+        it('places the popup below the input after opening it from its own button', async () => {
+            ColorPickerElement.anchorPositioning = anchorPositioning;
+            const {el, input} = mount('#ff0000', 'popup placement="bottom-start" theme="compact"');
+            el.input = null;
+            el.showPicker();
+            el.hidePicker();
+
+            el.input = input;
+            await click(input);
+
+            const box = input.getBoundingClientRect();
+            const panel = part(el, '.panel').getBoundingClientRect();
+            expect(panel.top).toBeCloseTo(box.bottom + 8, 0);
+            expect(panel.left).toBeCloseTo(box.left, 0);
+        });
     });
 });
 
