@@ -56,6 +56,10 @@ jobs:
         needs: build
         runs-on: ubuntu-24.04
         if: github.ref == 'refs/heads/main'
+        # Required by deploy-pages
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
