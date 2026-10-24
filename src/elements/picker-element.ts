@@ -1,5 +1,5 @@
-import {defaultFormats, sameColor} from '../color/index.js';
-import type {HSVA, OutputFormat} from '../color/index.js';
+import {defaultFormats, fillPowerless, parseColor, sameColor} from '../color/index.js';
+import type {HSVA, OutputFormat, ParsedColor} from '../color/index.js';
 import type {Disposable} from '../interactions/index.js';
 import {DEFAULT_COLOR} from '../state/index.js';
 import type {ColorInput, Picker, PickerState} from '../state/index.js';
@@ -18,6 +18,14 @@ export type Theme = 'horizontal' | 'vertical' | 'compact';
 
 // Lets this module be imported on servers (SSR) where there's no DOM, the element is only usable in browsers
 const BaseElement = (typeof HTMLElement === 'undefined' ? class {} : HTMLElement) as typeof HTMLElement;
+
+/** How long the copy button shows its check mark, in ms. */
+const COPIED_DURATION = 1500;
+
+/** The EyeDropper API, only available in Chromium. Not yet part of TypeScript's DOM types. */
+type EyeDropperConstructor = new () => { open(): Promise<{ sRGBHex: string }> };
+
+const eyeDropperApi = () => (globalThis as { EyeDropper?: EyeDropperConstructor }).EyeDropper;
 
 /**
  * `<colora-picker>`, a form-associated color picker. Shown inline, or as a button
@@ -68,6 +76,7 @@ export class ColorPickerElement extends BaseElement {
     #swatches: readonly ColorInput[] | null = null;
     #i18n: Partial<Labels> = {};
     #formDisabled = false;
+    #copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
     /** Set through the `input` property, overrides the `for` attribute. */
     #input: HTMLInputElement | null | undefined;
@@ -168,6 +177,8 @@ export class ColorPickerElement extends BaseElement {
 
         if (this.#content) {
             renderPanelLabels(this.#content, this.i18n);
+            // Without a previous state, so the swatches get named again
+            this.#render(this.#picker.getState());
         }
     }
 
@@ -440,12 +451,62 @@ export class ColorPickerElement extends BaseElement {
         this.#picker.adjustEnd();
     }
 
+    /** Copies the color being edited. The copy button shows a check mark for a moment, screen readers announce it. */
+    async #copy() {
+        const content = this.#content;
+
+        try {
+            await navigator.clipboard.writeText(this.currentValue);
+        } catch {
+            return; // Denied, e.g. on insecure origins
+        }
+
+        if (!content) {
+            return;
+        }
+
+        clearTimeout(this.#copiedTimer);
+        content.copy.classList.add('copied');
+        content.status.textContent = this.i18n.copied;
+
+        this.#copiedTimer = setTimeout(() => {
+            content.copy.classList.remove('copied');
+            content.status.textContent = '';
+        }, COPIED_DURATION);
+    }
+
+    /** Lets the user pick a color from the screen, like a change made with the sliders. Keeps the opacity. */
+    async #pickFromScreen() {
+        const EyeDropper = eyeDropperApi();
+
+        if (!EyeDropper || this.#picker.getState().disabled) {
+            return;
+        }
+
+        let parsed: ParsedColor | null;
+        try {
+            parsed = parseColor((await new EyeDropper().open()).sRGBHex);
+        } catch {
+            return; // Cancelled with Escape
+        }
+
+        if (parsed) {
+            const {h, s, v} = fillPowerless(parsed, this.#picker.getState().color);
+            this.#picker.adjust({h, s, v});
+            this.#picker.adjustEnd();
+        }
+    }
+
     /** Fills the panel with its controls. */
     #build(): PanelContent {
         const content = createPanelContent(this.#shell.panel);
         this.#content = content;
 
-        bindEvents(content, () => this.#picker, () => this.#revert());
+        bindEvents(this.#shell.panel, content, () => this.#picker, {
+            revert: () => this.#revert(),
+            copy: () => void this.#copy(),
+            pickFromScreen: () => void this.#pickFromScreen()
+        });
         renderPanelLabels(content, this.i18n);
         renderFormats(content, this.#formatList());
         this.#createSliders();
@@ -487,8 +548,13 @@ export class ColorPickerElement extends BaseElement {
         }
 
         if (content) {
-            renderPanel(content, state, this.#reference(state), previousContent);
-            renderVisibility(content, {hidden: this.#tokens('hide'), buttons: this.#tokens('buttons'), lockOpacity: this.#lockOpacity});
+            renderPanel(content, state, this.#reference(state), this.i18n, previousContent);
+            renderVisibility(content, {
+                hidden: this.#tokens('hide'),
+                buttons: this.#tokens('buttons'),
+                lockOpacity: this.#lockOpacity,
+                canPickFromScreen: !!eyeDropperApi()
+            });
         }
 
         this.#linked?.update();

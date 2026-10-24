@@ -124,7 +124,7 @@ const toLinear = (c: number) => {
     return abs <= 0.04045 ? c / 12.92 : Math.sign(c) * ((abs + 0.055) / 1.055) ** 2.4;
 };
 
-const fromLinear = (c: number) => {
+export const fromLinear = (c: number) => {
     const abs = Math.abs(c);
     return abs <= 0.0031308 ? c * 12.92 : Math.sign(c) * (1.055 * abs ** (1 / 2.4) - 0.055);
 };
@@ -239,4 +239,9 @@ export function oklchToRgb(origin: OKLCH): RGB {
     }
 
     return clipped;
+}
+
+/** Maps a color that may be outside of sRGB, e.g. from Display P3, into sRGB the same way as `oklchToRgb`. */
+export function mapToSrgb(rgb: RGB): RGB {
+    return inGamut(rgb) ? rgb : oklchToRgb(rgbToOklch(rgb));
 }

@@ -36,7 +36,7 @@ export interface ParsedColor {
 }
 
 export interface StringifyOptions {
-    /** Decimal places for channel values. Defaults to 0. */
+    /** Decimal places for channel values. Defaults to 0, and to 2 for OKLCH so colors survive a round-trip. */
     readonly precision?: number;
 
     /** Emit the legacy comma syntax of CSS with an explicit alpha, e.g. `rgba(1, 2, 3, 1)`. Applies to rgb, hsl and hsv. */

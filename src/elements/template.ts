@@ -33,10 +33,18 @@ const PANEL = `
 <div class="controls" part="controls">
   <input class="input" part="input" type="text" spellcheck="false" autocomplete="off">
   <div class="formats" part="formats" role="radiogroup"></div>
+  <button class="button icon copy" part="button copy" type="button">
+    <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M15 5V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1"/></svg>
+    <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+  </button>
+  <button class="button icon eyedropper" part="button eyedropper" type="button">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 4.5a2.1 2.1 0 0 0-3 0L14 7l-1-1-1.5 1.5 5 5L18 11l-1-1 2.5-2.5a2.1 2.1 0 0 0 0-3Z"/><path d="m13 9-8 8v2h2l8-8"/></svg>
+  </button>
   <button class="button save" part="button save" type="button"></button>
   <button class="button cancel" part="button cancel" type="button"></button>
   <button class="button clear" part="button clear" type="button"></button>
-</div>`;
+</div>
+<span class="status" role="status"></span>`;
 
 // Shared by all instances, created on first use
 let shellTemplate: HTMLTemplateElement | undefined;
@@ -88,9 +96,12 @@ export function createPanelContent(panel: HTMLElement) {
         controls: $('.controls'),
         input: $<HTMLInputElement>('.input'),
         formats: $('.formats'),
+        copy: $<HTMLButtonElement>('.copy'),
+        eyeDropper: $<HTMLButtonElement>('.eyedropper'),
         save: $<HTMLButtonElement>('.save'),
         cancel: $<HTMLButtonElement>('.cancel'),
-        clear: $<HTMLButtonElement>('.clear')
+        clear: $<HTMLButtonElement>('.clear'),
+        status: $('.status')
     };
 }
 

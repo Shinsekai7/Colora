@@ -1,11 +1,16 @@
 export type {ColorFormat, HSVA, OutputFormat, ParsedColor, Powerless, RGB, StringifyOptions} from './types.js';
 export {defaultFormats, fillPowerless, normalizeHsva, parseColor} from './parse.js';
 export {sameColor} from './compare.js';
+export {nameColor} from './name.js';
 export {cmykToRgb, hslToHsv, hsvToHsl, hsvToRgb, oklchToRgb, rgbToCmyk, rgbToHsv, rgbToOklch} from './convert.js';
 export {cmyk} from './formats/cmyk.js';
+export {colorFunction} from './formats/color-function.js';
 export {hex} from './formats/hex.js';
 export {hsl} from './formats/hsl.js';
 export {hsv} from './formats/hsv.js';
+export {hwb} from './formats/hwb.js';
+export {lab, lch} from './formats/lab.js';
 export {named, NAMED_COLORS} from './formats/named.js';
+export {oklab} from './formats/oklab.js';
 export {oklch} from './formats/oklch.js';
 export {rgb} from './formats/rgb.js';

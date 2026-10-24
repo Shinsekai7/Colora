@@ -29,7 +29,7 @@ describe('parseColor', () => {
 
     // Malformed numbers like "rgb(1.2.3, 0, 0)" must never turn into NaN channels
     it('never returns invalid values, whatever the input', () => {
-        const names = fc.constantFrom('rgb', 'rgba', 'hsl', 'hsla', 'hsv', 'hsva', 'oklch', 'cmyk', 'device-cmyk', '#');
+        const names = fc.constantFrom('rgb', 'rgba', 'hsl', 'hsla', 'hsv', 'hsva', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'color', 'color(display-p3', 'color(xyz', 'cmyk', 'device-cmyk', '#');
         const tokens = fc.oneof(
             fc.double().map(String),
             fc.integer({min: -1000, max: 1000}).map(String),

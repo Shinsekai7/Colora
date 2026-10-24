@@ -98,7 +98,7 @@ picker.addEventListener('change', () => console.log('committed', picker.value));
 | `formats` | Formats the user can switch between, default `hex rgb hsl`. Available: `hex`, `rgb`, `hsl`, `hsv`, `oklch`, `cmyk`. |
 | `format` | Initially selected format. |
 | `swatches` | Colors to choose from, separated by spaces or commas. |
-| `buttons` | Any of `save`, `cancel` and `clear`. With a save button, changes are only committed on save, and closing the popup reverts them. |
+| `buttons` | Any of `copy`, `eyedropper`, `save`, `cancel` and `clear`. With a save button, changes are only committed on save, and closing the popup reverts them. The eyedropper is only shown in browsers that have one (Chromium). |
 | `hide` | Parts to hide: `preview`, `area`, `hue`, `alpha`, `input`, `formats`. |
 | `lock-opacity` | Keeps colors fully opaque, hides the opacity slider. |
 | `disabled` | Can't be opened or changed. Also applies within a disabled `<fieldset>`. |
@@ -133,7 +133,7 @@ Like native inputs, setting `value` or attributes doesn't emit events.
 ### Keyboard
 
 The color area and sliders are focusable: arrow keys move by 1%, with <kbd>Shift</kbd> or <kbd>Page Up</kbd> / <kbd>Page Down</kbd> by 10%, <kbd>Home</kbd> and <kbd>End</kbd> jump to the ends.
-The format buttons are a radio group switched with arrow keys.
+The format buttons are a radio group switched with arrow keys. <kbd>Ctrl</kbd>+<kbd>C</kbd> (<kbd>Cmd</kbd>+<kbd>C</kbd> on macOS) copies the color from anywhere in the panel.
 
 The popup is a native popover: <kbd>Escape</kbd> or a click outside closes it, and the focus goes back to where it was.
 Opening a picker closes other open popups on the page, except ones it's inside of, e.g. a menu containing the picker.
@@ -190,7 +190,7 @@ colora-picker::part(panel) { width: 20em; }
 colora-picker::part(swatch) { border-radius: 50%; }
 ```
 
-Parts: `trigger`, `panel`, `sheet-header`, `sheet-close`, `selection`, `preview`, `saved`, `current`, `area`, `slider`, `hue`, `alpha`, `thumb`, `swatches`, `swatch`, `swatch-active`, `controls`, `input`, `formats`, `format`, `button`, `save`, `cancel`, `clear`.
+Parts: `trigger`, `panel`, `sheet-header`, `sheet-close`, `selection`, `preview`, `saved`, `current`, `area`, `slider`, `hue`, `alpha`, `thumb`, `swatches`, `swatch`, `swatch-active`, `controls`, `input`, `formats`, `format`, `button`, `copy`, `eyedropper`, `save`, `cancel`, `clear`.
 
 ## Translations
 
@@ -202,16 +202,22 @@ picker.i18n = {
     toggle: 'Choose color',                // Accessible name of the button opening the popup
     area: 'Saturation and brightness',     // Accessible name of the color area
     areaRole: '2D slider',                 // Announced type of the color area
+    saturation: 'Saturation',              // Announced with the color area's value
+    brightness: 'Brightness',              // Announced with the color area's value
     hue: 'Hue',                            // Accessible name of the hue slider
     alpha: 'Opacity',                      // Accessible name of the opacity slider
     input: 'Color value',                  // Accessible name of the text field
     formats: 'Color format',               // Accessible name of the format buttons
     swatches: 'Swatches',                  // Accessible name of the swatches
     saved: 'Revert to previous color',     // Accessible name of the previous color in the preview
+    copy: 'Copy color',                    // Accessible name of the copy button
+    copied: 'Copied',                      // Announced after copying
+    eyeDropper: 'Pick a color from the screen', // Accessible name of the eyedropper button
     save: 'Save',                          // Text of the save button
     cancel: 'Cancel',                      // Text of the cancel button
     clear: 'Clear',                        // Text of the clear button
-    close: 'Close'                         // Text of the close button of the sheet on phones
+    close: 'Close',                        // Text of the close button of the sheet on phones
+    colorName: nameColor                   // Names a color for screen readers, e.g. 'dark blue'
 };
 ```
 
@@ -226,11 +232,12 @@ import {parseColor, fillPowerless, oklch, rgb} from '@shinsekai/colora';
 
 const parsed = parseColor('rebeccapurple'); // {format: 'named', color: {h: 270, s: 66.67, v: 60, a: 1}, ...}
 rgb.stringify(parsed.color);                // 'rgb(102 51 153)'
-oklch.stringify(parsed.color);              // 'oklch(44% 0.16 303)'
+oklch.stringify(parsed.color);              // 'oklch(44.03% 0.1603 303.37)'
 rgb.stringify(parsed.color, {legacy: true}) // 'rgba(102, 51, 153, 1)'
 ```
 
-Invalid input, including out-of-range values, returns `null`. Colors outside of sRGB, like `oklch(70% 0.4 150)`, are mapped into sRGB as specified by CSS.
+`parseColor`, the text field and the `value` attribute read all CSS color syntaxes: hex, `rgb()`, `hsl()`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()` with any of the predefined color spaces like `display-p3`, and named colors. `hsv()` works too.
+Invalid input, including out-of-range values, returns `null`. Colors outside of sRGB, like `oklch(70% 0.4 150)` or `color(display-p3 1 0 0)`, are mapped into sRGB as specified by CSS.
 A format is an object with `parse` and `stringify`, so custom formats can be passed to `formats` as well.
 
 ## Building your own UI

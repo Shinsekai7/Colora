@@ -39,14 +39,15 @@ export function renderShell(shell: Shell, state: PickerState) {
  * Renders the state on the panel's controls. Swatches are only re-created if they changed since `previous`.
  * The preview compares the color with `reference`, see the element.
  */
-export function renderPanel(content: PanelContent, state: PickerState, reference: HSVA | null, previous?: PickerState) {
+export function renderPanel(content: PanelContent, state: PickerState, reference: HSVA | null, labels: Labels, previous?: PickerState) {
     const {preview, area, hue, alpha, input, formats, swatches} = content;
     const {color} = state;
+    const name = labels.colorName(color);
 
     preview.style.setProperty('--cp-reference', reference ? rgbString(reference) : 'transparent');
 
-    setAria(area, Math.round(color.s), `${percent(color.s)}, ${percent(color.v)}`);
-    setAria(hue, Math.round(color.h), `${Math.round(color.h)}°`);
+    setAria(area, Math.round(color.s), `${labels.saturation} ${percent(color.s)}, ${labels.brightness} ${percent(color.v)}, ${name}`);
+    setAria(hue, Math.round(color.h), `${Math.round(color.h)}°, ${name}`);
     setAria(alpha, Math.round(color.a * 100), percent(color.a * 100));
 
     // Only touch the input if needed, so the caret doesn't jump while typing
@@ -69,7 +70,8 @@ export function renderPanel(content: PanelContent, state: PickerState, reference
             button.className = 'swatch';
             button.part.add('swatch');
             button.style.setProperty('--cp-swatch-color', rgbString(swatch));
-            button.setAttribute('aria-label', hex.stringify(swatch));
+            // The hex code tells apart swatches with the same name
+            button.setAttribute('aria-label', `${labels.colorName(swatch)}, ${hex.stringify(swatch)}`);
             return button;
         }));
     }
@@ -104,10 +106,13 @@ export interface Visibility {
     buttons: readonly string[];
 
     lockOpacity: boolean;
+
+    /** Whether the browser has an eyedropper, only Chromium does. */
+    canPickFromScreen: boolean;
 }
 
-export function renderVisibility(content: PanelContent, {hidden, buttons, lockOpacity}: Visibility) {
-    const {preview, area, hue, alpha, input, formats, save, cancel, clear, controls} = content;
+export function renderVisibility(content: PanelContent, {hidden, buttons, lockOpacity, canPickFromScreen}: Visibility) {
+    const {preview, area, hue, alpha, input, formats, copy, eyeDropper, save, cancel, clear, controls} = content;
 
     preview.hidden = hidden.includes('preview');
     area.hidden = hidden.includes('area');
@@ -115,10 +120,12 @@ export function renderVisibility(content: PanelContent, {hidden, buttons, lockOp
     alpha.hidden = hidden.includes('alpha') || lockOpacity;
     input.hidden = hidden.includes('input');
     formats.hidden = hidden.includes('formats') || formats.children.length < 2;
+    copy.hidden = !buttons.includes('copy');
+    eyeDropper.hidden = !buttons.includes('eyedropper') || !canPickFromScreen;
     save.hidden = !buttons.includes('save');
     cancel.hidden = !buttons.includes('cancel');
     clear.hidden = !buttons.includes('clear');
-    controls.hidden = [input, formats, save, cancel, clear].every(el => el.hidden);
+    controls.hidden = [input, formats, copy, eyeDropper, save, cancel, clear].every(el => el.hidden);
 }
 
 /** Sets the accessible names of the trigger and the popup. */
@@ -129,7 +136,7 @@ export function renderShellLabels({trigger, panel}: Shell, labels: Labels) {
 
 /** Sets texts and accessible names of the panel's controls. Uses textContent and attributes only, never HTML. */
 export function renderPanelLabels(content: PanelContent, labels: Labels) {
-    const {area, hue, alpha, input, formats, swatches, saved, save, cancel, clear, sheetClose} = content;
+    const {area, hue, alpha, input, formats, swatches, saved, copy, eyeDropper, save, cancel, clear, sheetClose} = content;
 
     area.setAttribute('aria-label', labels.area);
     area.setAttribute('aria-roledescription', labels.areaRole);
@@ -139,6 +146,13 @@ export function renderPanelLabels(content: PanelContent, labels: Labels) {
     formats.setAttribute('aria-label', labels.formats);
     swatches.setAttribute('aria-label', labels.swatches);
     saved.setAttribute('aria-label', labels.saved);
+
+    // Icon buttons, the title shows their name on hover
+    for (const [button, label] of [[copy, labels.copy], [eyeDropper, labels.eyeDropper]] as const) {
+        button.setAttribute('aria-label', label);
+        button.title = label;
+    }
+
     save.textContent = labels.save;
     cancel.textContent = labels.cancel;
     clear.textContent = labels.clear;

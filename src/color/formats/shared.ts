@@ -1,4 +1,4 @@
-import {rgbToHsv} from '../convert.js';
+import {mapToSrgb, rgbToHsv} from '../convert.js';
 import {fmt} from '../math.js';
 import type {ParsedColor, RGB, StringifyOptions} from '../types.js';
 
@@ -14,6 +14,15 @@ export function fromRgb(format: string, rgb: RGB, a: number): ParsedColor {
         color: {...hsv, a},
         powerless: {h: hsv.s === 0, s: hsv.v === 0}
     };
+}
+
+/**
+ * Like `fromRgb`, for colors that may lie outside of sRGB: maps them into it first.
+ * Returns null if the color isn't finite, e.g. for huge Lab values.
+ */
+export function fromWideGamut(format: string, rgb: RGB, a: number): ParsedColor | null {
+    const mapped = mapToSrgb(rgb);
+    return [mapped.r, mapped.g, mapped.b].every(Number.isFinite) ? fromRgb(format, mapped, a) : null;
 }
 
 /** Alpha keeps at least three decimals so 8-bit alpha values survive a round-trip. */

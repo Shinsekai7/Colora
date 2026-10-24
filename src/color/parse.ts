@@ -1,13 +1,18 @@
+import {colorFunction} from './formats/color-function.js';
 import {hex} from './formats/hex.js';
 import {hsl} from './formats/hsl.js';
 import {hsv} from './formats/hsv.js';
+import {hwb} from './formats/hwb.js';
+import {lab, lch} from './formats/lab.js';
 import {named} from './formats/named.js';
+import {oklab} from './formats/oklab.js';
 import {oklch} from './formats/oklch.js';
 import {rgb} from './formats/rgb.js';
 import {mod} from './math.js';
 import type {ColorFormat, HSVA, ParsedColor} from './types.js';
 
-export const defaultFormats: readonly ColorFormat[] = [hex, rgb, hsl, hsv, oklch, named];
+/** Formats `parseColor` accepts by default: all of CSS, plus hsv. */
+export const defaultFormats: readonly ColorFormat[] = [hex, rgb, hsl, hsv, hwb, lab, lch, oklab, oklch, colorFunction, named];
 
 /**
  * Parses a color string using the first format that accepts it.
